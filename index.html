@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบเตรียมสอบและฝึกเขียนข้อสอบอัตนัย 70% นักวิชาการคอมพิวเตอร์ปฏิบัติการ</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --bg: #09090b;
+      --card-bg: #121215;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(255, 255, 255, 0.2);
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    body {
+      background-color: var(--bg);
+      font-family: 'Sarabun', 'Inter', -apple-system, sans-serif;
+      color: #f4f4f5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    code, pre, textarea, .font-mono {
+      font-family: 'JetBrains Mono', 'Sarabun', monospace !important;
+    }
+
+    .ease-spring {
+      transition: all 0.25s var(--ease);
+    }
+
+    .slide-enter {
+      animation: fadeIn 0.25s var(--ease) forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col p-3 md:p-6 select-none bg-[#09090b]">
+
+  <!-- ================= แถบเมนูด้านบน ================= -->
+  <header class="max-w-6xl mx-auto w-full flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+    <div class="flex items-center gap-3">
+      <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono font-bold tracking-wider text-zinc-200">โต๊ะเตรียมสอบภาค ข</span>
+          <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-400 border border-white/[0.06]">ข้อเขียน 70 คะแนน</span>
+        </div>
+        <div class="text-xs text-zinc-400">นักวิชาการคอมพิวเตอร์ปฏิบัติการ (คลังข้อสอบและห้องซ้อมตรวจโค้ด)</div>
+      </div>
+    </div>
+
+    <!-- ปุ่มสลับโหมดการทำงาน -->
+    <div class="flex items-center gap-3">
+      <nav class="relative flex items-center bg-zinc-900 border border-white/[0.08] rounded-lg p-0.5 text-xs">
+        <button id="navLecture" onclick="switchTab('lecture')" class="ease-spring relative z-10 px-3.5 py-1.5 rounded-md font-medium text-white">
+          สไลด์บรรยาย (15 หน้า)
+        </button>
+        <button id="navTest" onclick="switchTab('test')" class="ease-spring relative z-10 px-3.5 py-1.5 rounded-md font-medium text-zinc-400 hover:text-white">
+          ห้องซ้อมตรวจโค้ดสด (12 โจทย์)
+        </button>
+        <div id="navPill" class="absolute top-0.5 left-0.5 h-[calc(100%-4px)] w-[124px] bg-zinc-800 rounded-md border border-white/[0.1] ease-spring pointer-events-none"></div>
+      </nav>
+
+      <!-- ปุ่มเลื่อนสไลด์ -->
+      <div id="slideNavControls" class="flex items-center gap-1.5 text-xs font-mono">
+        <span id="slideCounter" class="text-zinc-500 px-2 tabular-nums">01 / 15</span>
+        <button onclick="prevSlide()" id="btnPrev" class="w-7 h-7 flex items-center justify-center rounded border border-white/[0.08] bg-zinc-900 text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 ease-spring">‹</button>
+        <button onclick="nextSlide()" id="btnNext" class="w-7 h-7 flex items-center justify-center rounded border border-white/[0.08] bg-zinc-900 text-zinc-300 hover:bg-zinc-800 disabled:opacity-30 ease-spring">›</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= หน้าที่ 1: สไลด์บรรยายเต็ม 15 หน้า ================= -->
+  <main id="lectureView" class="flex-1 max-w-6xl mx-auto w-full flex items-center justify-center py-5">
+    <div class="w-full bg-[#111114] border border-white/[0.08] rounded-xl p-6 md:p-8 min-h-[550px] flex flex-col justify-between ease-spring">
+      <div id="slideViewport" class="slide-enter flex-1 overflow-y-auto max-h-[66vh] pr-2"></div>
+
+      <!-- แถบล่างของสไลด์ -->
+      <div class="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-500">
+        <span id="slideTag" class="text-zinc-400 font-sans">หมวดเนื้อหา</span>
+        <span>กดแป้นพิมพ์ [ ← ] [ → ] หรือ [ Spacebar ] เพื่อเปลี่ยนหน้า</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= หน้าที่ 2: ห้องซ้อมทำโจทย์สด & ตรวจผลลัพธ์ทีละ STEP ================= -->
+  <main id="testView" class="hidden flex-1 max-w-6xl mx-auto w-full py-4 space-y-4">
+
+    <!-- แถบเลือกพาร์ทข้อสอบและปุ่มสุ่มโจทย์ -->
+    <div class="p-4 rounded-xl bg-[#111114] border border-white/[0.08] flex flex-wrap items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-white/[0.06]" id="activePartBadge">ข้อเขียนที่ 1</span>
+          <span class="text-xs text-zinc-500 font-mono" id="scenarioCounterBadge">(โจทย์ที่ 1 จาก 5)</span>
+          <h2 class="text-sm font-bold text-white tracking-tight" id="activeScenarioTitle">
+            ระบบจองตั๋วรถทัวร์ออนไลน์ (5 ขั้นตอน)
+          </h2>
+        </div>
+        <p class="text-xs text-zinc-400" id="activeScenarioDesc">
+          เขียนโค้ดภาษา Python แบ่ง 5 ขั้นตอน พร้อมคำนวณและดักจับความถูกต้อง
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- ตัวสลับ 3 พาร์ทข้อสอบ -->
+        <div class="flex bg-zinc-900 border border-white/[0.08] rounded-lg p-0.5 text-xs">
+          <button id="btnPart1" onclick="switchPart(1)" class="px-3 py-1.5 rounded-md font-medium bg-zinc-800 text-white ease-spring">ข้อ 1: โปรแกรม 5 ขั้นตอน (5 โจทย์)</button>
+          <button id="btnPart2" onclick="switchPart(2)" class="px-3 py-1.5 rounded-md font-medium text-zinc-400 hover:text-white ease-spring">ข้อ 2: Flowchart & อัลกอริทึม (4 โจทย์)</button>
+          <button id="btnPart3" onclick="switchPart(3)" class="px-3 py-1.5 rounded-md font-medium text-zinc-400 hover:text-white ease-spring">ข้อ 3: ฐานข้อมูล SQL (3 โจทย์ใหญ่)</button>
+        </div>
+
+        <!-- ปุ่มสุ่มโจทย์ใหม่ -->
+        <button onclick="randomizeScenario()" class="px-3.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 text-xs font-medium ease-spring flex items-center gap-1.5">
+          <span>สุ่มโจทย์ถัดไป</span>
+          <span>➔</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- พื้นที่ทำงานแบบ 2 ฝั่ง: ซ้ายพิมพ์โค้ด / ขวาตรวจผลลัพธ์ทีละ Step -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- ฝั่งซ้าย: กล่องพิมพ์โค้ด (7 ส่วน) -->
+      <div class="lg:col-span-7 flex flex-col bg-[#111114] border border-white/[0.08] rounded-xl overflow-hidden">
+        
+        <div class="flex items-center justify-between px-4 py-2.5 bg-zinc-900/80 border-b border-white/[0.06] text-xs font-mono">
+          <div class="text-zinc-300" id="editorHeaderLabel">bus_booking.py</div>
+          <div class="flex items-center gap-3">
+            <button onclick="insertTemplateCode()" class="text-emerald-400 hover:underline ease-spring">โหลดโค้ดตัวอย่าง</button>
+            <span class="text-zinc-600">|</span>
+            <span id="editorStats" class="text-zinc-500">0 บรรทัด</span>
+          </div>
+        </div>
+
+        <div class="p-3 relative flex-1">
+          <textarea id="codeEditor" oninput="onCodeInput()" spellcheck="false" 
+            placeholder="# เริ่มต้นเขียนคำตอบข้อสอบของคุณที่นี่..."
+            class="w-full h-[410px] bg-transparent text-xs font-mono text-zinc-200 leading-relaxed resize-none focus:outline-none"></textarea>
+        </div>
+
+        <!-- แถบกดรันตรวจข้อสอบ -->
+        <div class="p-3 bg-zinc-900/60 border-t border-white/[0.06] flex items-center justify-between text-xs">
+          <span class="text-zinc-500 font-mono text-[11px]">กดแป้นพิมพ์ [ Ctrl + Enter ] เพื่อตรวจผลลัพธ์</span>
+          <button onclick="runVerification()" id="btnRunTests" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium ease-spring flex items-center gap-2">
+            <span>รันตรวจสอบทีละขั้นตอน</span>
+            <span>↵</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ฝั่งขวา: ผลการตรวจทีละขั้นตอน & กล่องแจ้งผล (5 ส่วน) -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <!-- รายการตรวจทีละ Step -->
+        <div class="p-4 rounded-xl bg-[#111114] border border-white/[0.08] space-y-3">
+          <div class="flex items-center justify-between border-b border-white/[0.06] pb-2 text-xs">
+            <span class="text-zinc-400 font-semibold font-mono">ผลการตรวจทีละขั้นตอน (STEP-BY-STEP)</span>
+            <span id="testSummaryBadge" class="text-zinc-400 font-bold font-mono">พร้อมตรวจ</span>
+          </div>
+
+          <!-- กล่องแสดงสถานะแต่ละ Step -->
+          <div id="stepResultsList" class="space-y-2 text-xs">
+            <!-- สร้างผ่าน JS -->
+          </div>
+        </div>
+
+        <!-- กล่องบันทึกผลการตรวจสอบ (Diagnostic Output) -->
+        <div class="p-4 rounded-xl bg-[#111114] border border-white/[0.08] space-y-2">
+          <div class="text-xs font-mono text-zinc-400 font-semibold">ผลการประเมินและคำแนะนำ</div>
+          <div id="diagnosticConsole" class="p-3 rounded-lg bg-black/60 border border-white/[0.04] text-[11px] font-mono text-zinc-400 h-[145px] overflow-y-auto space-y-1">
+            <div class="text-zinc-600">// กดปุ่ม "รันตรวจสอบทีละขั้นตอน" เพื่อให้ระบบประเมินโค้ดเทียบกับเกณฑ์ข้อสอบ</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // ================= ข้อมูลสไลด์เต็ม 15 หน้า (พร้อมรูปวาดจริง Flowchart SVG เส้นจริง + คัมภีร์ Pseudocode) =================
+    const slidesData = [
+      {
+        tag: "หน้าปก & สัดส่วนข้อสอบ",
+        render: () => `
+          <div class="space-y-6">
+            <span class="text-xs font-mono text-emerald-400 font-semibold">[ สไลด์ที่ 01 ] กลยุทธ์การสอบ</span>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white leading-tight">
+              เจาะลึกข้อสอบอัตนัย 70 คะแนน <br><span class="text-zinc-400 font-normal">นักวิชาการคอมพิวเตอร์ปฏิบัติการ (3 ชั่วโมง)</span>
+            </h1>
+            <p class="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+              ข้อสอบภาค ข สัดส่วนคือ <b>ข้อเขียน 70% และข้อกา 30%</b> คนส่วนใหญ่สอบไม่ผ่านไม่ใช่เพราะเขียนโค้ดไม่เป็น แต่เพราะ <span class="text-white font-semibold">"บริหารเวลา 3 ชั่วโมงไม่ทัน"</span> จึงต้องวางแผนเวลาให้ชัดเจน:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+              <div class="p-4 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="text-xs font-mono text-emerald-400 mb-1">ข้อเขียนที่ 1 (25 คะแนน)</div>
+                <div class="font-bold text-white text-sm">เขียนโปรแกรม 5 ขั้นตอน</div>
+                <p class="text-xs text-zinc-400 mt-2">เขียนโค้ดด้วยมือลงกระดาษ วัดการออกแบบกระบวนการทำงานให้ครบวงจร</p>
+                <div class="mt-3 text-xs font-mono text-zinc-500">⏱️ โควตาเวลา: ไม่เกิน 50 นาที</div>
+              </div>
+
+              <div class="p-4 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="text-xs font-mono text-blue-400 mb-1">ข้อเขียนที่ 2 (25 คะแนน)</div>
+                <div class="font-bold text-white text-sm">Flowchart & อัลกอริทึม</div>
+                <p class="text-xs text-zinc-400 mt-2">อัลกอริทึมจัดการคิว จัดสรรทรัพยากร และสัญลักษณ์ผังงาน ANSI</p>
+                <div class="mt-3 text-xs font-mono text-zinc-500">⏱️ โควตาเวลา: ไม่เกิน 40 นาที</div>
+              </div>
+
+              <div class="p-4 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="text-xs font-mono text-amber-400 mb-1">ข้อเขียนที่ 3 (20 คะแนน)</div>
+                <div class="font-bold text-white text-sm">จัดการฐานข้อมูล & SQL</div>
+                <p class="text-xs text-zinc-400 mt-2">คำสั่งแก้ไขข้อมูล (UPDATE / DELETE) และการเชื่อมตาราง JOIN</p>
+                <div class="mt-3 text-xs font-mono text-zinc-500">⏱️ โควตาเวลา: ไม่เกิน 30 นาที</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "เกณฑ์การให้คะแนนของกรรมการ",
+        render: () => `
+          <div class="space-y-5">
+            <span class="text-xs font-mono text-blue-400 font-semibold">[ สไลด์ที่ 02 ] จิตวิทยาการตรวจข้อสอบกระดาษ</span>
+            <h2 class="text-2xl font-bold text-white">กรรมการตรวจอะไรในกระดาษคำตอบ?</h2>
+            <p class="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+              ในห้องสอบไม่มีคอมพิวเตอร์มารันโค้ด กรรมการมีเวลาตรวจแผ่นละไม่กี่นาที นี่คือจุดแยกคนที่ได้คะแนนเต็มกับคนที่โดนตัดคะแนน:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 text-xs">
+              <div class="p-4 rounded-lg bg-emerald-500/[0.04] border border-emerald-500/20 space-y-2.5">
+                <div class="font-bold text-emerald-400 text-sm">จุดที่ทำให้ได้คะแนนเต็ม (มีแล้วรอด)</div>
+                <ul class="space-y-2 list-disc pl-4 text-zinc-300 leading-relaxed">
+                  <li><b>แยก 5 ขั้นตอนเด่นชัด:</b> มีหัวข้อ <code># ขั้นตอนที่ 1: ...</code> ถึง <code>5</code> ชัดเจน กรรมการกวาดสายตาให้คะแนนได้ทันที</li>
+                  <li><b>มีเงื่อนไขดักจับข้อมูล (Validation):</b> ดักจับค่าว่างหรือตัวเลขติดลบ แสดงความเป็นมืออาชีพ</li>
+                  <li><b>สัญลักษณ์ Flowchart ถูกต้อง:</b> สี่เหลี่ยมข้าวหลามตัดต้องมีลูกศร ใช่/ไม่ใช่ ชัดเจน</li>
+                  <li><b>คำสั่ง SQL ปลอดภัย:</b> มีเงื่อนไข <code>WHERE</code> ในคำสั่ง UPDATE และ DELETE ทุกครั้ง</li>
+                </ul>
+              </div>
+
+              <div class="p-4 rounded-lg bg-rose-500/[0.04] border border-rose-500/20 space-y-2.5">
+                <div class="font-bold text-rose-400 text-sm">จุดที่ทำให้โดนหักคะแนนหนัก (กับดักคะแนนตก)</div>
+                <ul class="space-y-2 list-disc pl-4 text-zinc-300 leading-relaxed">
+                  <li><b>เขียนโค้ดยาวเป็นก้อนเดียว:</b> ไม่แบ่งฟังก์ชัน ไม่มีคอมเมนต์อธิบายขั้นตอน</li>
+                  <li><b>เลือกภาษาที่เขียนยาวเกินไป:</b> เขียน Java หรือ C ในกระดาษแล้วตกหล่นปีกกาหรือเซมิโคลอน (แนะนำให้ใช้ <b>Python</b>)</li>
+                  <li><b>ตั้งชื่อตัวแปรย่อเกินไป:</b> ใช้ x, y, z แทนที่จะเป็น route, seats, total_price</li>
+                  <li><b>ลืมใส่เงื่อนไข WHERE ใน SQL:</b> ถือว่าคำสั่งทำลายข้อมูลทั้งตาราง โดนตัดคะแนนทันที</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "แม่แบบ 5 ขั้นตอนสากล",
+        render: () => `
+          <div class="space-y-5">
+            <span class="text-xs font-mono text-purple-400 font-semibold">[ สไลด์ที่ 03 ] พิมพ์เขียวโครงสร้างโปรแกรม</span>
+            <h2 class="text-2xl font-bold text-white">สูตรท่องจำ 5 ขั้นตอนครอบจักรวาล</h2>
+            <p class="text-sm text-zinc-400">
+              ไม่ว่าโจทย์จะสั่งให้เขียนระบบอะไร ให้จับกระบวนการทำงานใส่ลงใน 5 กล่องนี้เสมอ:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-2 text-xs font-mono pt-1">
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] text-center">
+                <div class="text-[10px] text-zinc-500">ขั้นตอนที่ 1</div>
+                <div class="font-bold text-white mt-1">รับเข้า & ตรวจสอบ</div>
+                <p class="text-[11px] text-zinc-400 mt-2 font-sans">รับค่าจากผู้ใช้ + ดักจับค่าว่างหรือเลขติดลบ</p>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] text-center">
+                <div class="text-[10px] text-zinc-500">ขั้นตอนที่ 2</div>
+                <div class="font-bold text-white mt-1">ค้นหา & เช็กระบบ</div>
+                <p class="text-[11px] text-zinc-400 mt-2 font-sans">ค้นข้อมูลในระบบ + ตรวจสอบที่นั่งหรือสต็อกว่าง</p>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] text-center">
+                <div class="text-[10px] text-zinc-500">ขั้นตอนที่ 3</div>
+                <div class="font-bold text-white mt-1">ประมวลผลคำนวณ</div>
+                <p class="text-[11px] text-zinc-400 mt-2 font-sans">คำนวณราคา ค่าธรรมเนียม หรือภาษี VAT 7%</p>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] text-center">
+                <div class="text-[10px] text-zinc-500">ขั้นตอนที่ 4</div>
+                <div class="font-bold text-white mt-1">ตัดสต็อก & บันทึก</div>
+                <p class="text-[11px] text-zinc-400 mt-2 font-sans">ตัดยอดคงเหลือ + เซฟประวัติลงตารางฐานข้อมูล</p>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] text-center">
+                <div class="text-[10px] text-zinc-500">ขั้นตอนที่ 5</div>
+                <div class="font-bold text-white mt-1">แสดงผล & ออกตั๋ว</div>
+                <p class="text-[11px] text-zinc-400 mt-2 font-sans">พิมพ์ตั๋ว บัตรคิว หรือออกรายงานยืนยันผล</p>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg bg-zinc-900 border border-white/[0.08] text-xs font-mono flex items-center justify-between">
+              <span class="text-zinc-400">สูตรจำเข้าหัว:</span>
+              <span class="text-emerald-400 font-bold">"รับเข้าตรวจ ➔ หาดู ➔ คิดเลข ➔ บันทึก ➔ แสดงผล"</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "ตัวอย่างโค้ดที่ 1: ระบบจองตั๋วรถทัวร์",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-emerald-400 font-semibold">[ สไลด์ที่ 04 ] โค้ดภาษา Python พร้อมคอมเมนต์ภาษาไทย</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">ตัวอย่างโค้ด: ระบบจองตั๋วรถทัวร์ออนไลน์</h2>
+            <div class="p-3.5 rounded-xl bg-black/60 border border-white/[0.08] overflow-x-auto text-[11px] font-mono text-zinc-300 max-h-[350px] leading-relaxed">
+<pre><code># ------------------------------------------------------------------------------
+# ขั้นตอนที่ 1: รับข้อมูลการเดินทางและตรวจสอบความถูกต้อง (Input & Validation)
+# ------------------------------------------------------------------------------
+def process_1_get_input():
+    route = input("เส้นทาง (เชียงใหม่ / ภูเก็ต): ").strip() # route = ชื่อเส้นทาง
+    seats_requested = int(input("จำนวนที่นั่ง: "))        # seats = จำนวนที่ต้องการจอง
+    if seats_requested &lt;= 0:
+        raise ValueError("จำนวนที่นั่งต้องมากกว่า 0")     # ดักจับเลขติดลบหรือศูนย์
+    return route, seats_requested
+
+# ------------------------------------------------------------------------------
+# ขั้นตอนที่ 2: ตรวจสอบเที่ยวรถและที่นั่งว่างในระบบ (Availability Check)
+# ------------------------------------------------------------------------------
+def process_2_check_seats(route, seats_requested, bus_database):
+    if route not in bus_database:
+        return False, 0 # ไม่พบเส้นทาง
+    if bus_database[route]["available"] &lt; seats_requested:
+        return False, 0 # ที่นั่งว่างไม่เพียงพอ
+    price_per_seat = bus_database[route]["price"] # ราคาต่อที่นั่ง
+    return True, price_per_seat
+
+# ------------------------------------------------------------------------------
+# ขั้นตอนที่ 3: คำนวณค่าโดยสารและภาษีมูลค่าเพิ่ม (Fare Calculation)
+# ------------------------------------------------------------------------------
+def process_3_calculate_fare(seats, price):
+    subtotal = seats * price      # ราคารวมก่อนภาษี
+    vat = subtotal * 0.07         # ภาษีมูลค่าเพิ่ม 7%
+    net_total = subtotal + vat    # ยอดเงินสุทธิ
+    return net_total
+
+# ------------------------------------------------------------------------------
+# ขั้นตอนที่ 4: ตัดสต็อกที่นั่งและบันทึกข้อมูลการจอง (Data Persistence)
+# ------------------------------------------------------------------------------
+def process_4_save_booking(booking_id, route, seats, total, bus_database):
+    bus_database[route]["available"] -= seats # ตัดยอดที่นั่งว่างออกจากระบบ
+    record = {"id": booking_id, "route": route, "seats": seats, "total": total}
+    return record
+
+# ------------------------------------------------------------------------------
+# ขั้นตอนที่ 5: ออกตั๋วโดยสารอิเล็กทรอนิกส์ (Ticket Output)
+# ------------------------------------------------------------------------------
+def process_5_print_ticket(record):
+    print(f"=== E-TICKET {record['id']} | เส้นทาง: {record['route']} | ยอดเงิน: {record['total']:,.2f} บาท ===")</code></pre>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "การประยุกต์ใช้เมื่อโจทย์เปลี่ยน",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-purple-400 font-semibold">[ สไลด์ที่ 05 ] การประยุกต์ใช้กับโจทย์อื่น</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">ถ้าข้อสอบเปลี่ยนโจทย์? (เปรียบเทียบแบบ 1:1)</h2>
+            <p class="text-sm text-zinc-400">แสดงให้เห็นว่าแม่แบบ 5 ขั้นตอนสามารถนำไปตอบโจทย์งานราชการอื่นๆ ได้ทั้งหมด:</p>
+
+            <div class="overflow-hidden rounded-lg border border-white/[0.08] text-xs">
+              <table class="w-full text-left">
+                <thead class="bg-zinc-900 border-b border-white/[0.08] text-zinc-300 font-semibold">
+                  <tr>
+                    <th class="p-3">ขั้นตอน</th>
+                    <th class="p-3 text-blue-400">โจทย์ 1: จองตั๋วรถทัวร์</th>
+                    <th class="p-3 text-emerald-400">โจทย์ 2: จองคิวงานที่ดิน</th>
+                    <th class="p-3 text-amber-400">โจทย์ 3: เบิกพัสดุสำนักงาน</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/[0.04] text-zinc-400 bg-zinc-950">
+                  <tr>
+                    <td class="p-3 font-medium text-white">1. รับเข้า & ตรวจ</td>
+                    <td class="p-3">รับเส้นทาง + จำนวนที่นั่ง</td>
+                    <td class="p-3">รับเลขบัตร ปชช. 13 หลัก</td>
+                    <td class="p-3">รับรหัสพนักงาน + รหัสพัสดุ</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 font-medium text-white">2. ค้นหาระบบ</td>
+                    <td class="p-3">เช็กที่นั่งว่างของเที่ยวรถ</td>
+                    <td class="p-3">เช็กคิวว่างของงานนิติกรรม</td>
+                    <td class="p-3">เช็กสต็อกคงเหลือในคลัง</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 font-medium text-white">3. คำนวณ</td>
+                    <td class="p-3">คิดค่าตั๋ว + VAT 7%</td>
+                    <td class="p-3">คำนวณเวลารอคอยเฉลี่ย</td>
+                    <td class="p-3">คำนวณมูลค่ารวมที่เบิก</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 font-medium text-white">4. บันทึกข้อมูล</td>
+                    <td class="p-3">ตัดยอดที่นั่ง + เซฟการจอง</td>
+                    <td class="p-3">บันทึกลงตารางคิวบริการ</td>
+                    <td class="p-3">ตัดยอดสต็อกออกจากคลัง</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 font-medium text-white">5. แสดงผล</td>
+                    <td class="p-3">พิมพ์ตั๋ว E-Ticket</td>
+                    <td class="p-3">พิมพ์บัตรคิวประชาชน</td>
+                    <td class="p-3">พิมพ์ใบส่งมอบพัสดุ</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "ข้อเขียนที่ 2: ตรรกะระบบลิฟต์",
+        render: () => `
+          <div class="space-y-5">
+            <span class="text-xs font-mono text-blue-400 font-semibold">[ สไลด์ที่ 06 ] อัลกอริทึมจัดการลิฟต์</span>
+            <h2 class="text-2xl font-bold text-white">ลิฟต์ 3 ตัว ตึก 5 ชั้น: 3 ลำดับความสำคัญ</h2>
+            <p class="text-sm text-zinc-400">
+              เมื่อมีผู้โดยสารกดเรียกที่ชั้น <b>R</b> ทิศทาง <b>D</b> (ขึ้นหรือลง) ระบบจะคัดเลือกลิฟต์ตาม 3 ลำดับขั้น:
+            </p>
+
+            <div class="space-y-3 pt-1 text-xs">
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex items-start gap-3">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold font-mono">ลำดับที่ 1</span>
+                <div>
+                  <div class="font-bold text-white">ลิฟต์จอดว่าง (IDLE) ที่ชั้น R พอดี</div>
+                  <div class="text-zinc-400 mt-1">สั่งเปิดประตูรับผู้โดยสารได้ทันที ไม่ต้องมีการเคลื่อนที่</div>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex items-start gap-3">
+                <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold font-mono">ลำดับที่ 2</span>
+                <div>
+                  <div class="font-bold text-white">ลิฟต์ที่กำลังวิ่งมาใน "ทิศทางเดียวกัน" และยังไม่เลยชั้น</div>
+                  <div class="text-zinc-400 mt-1">เช่น คนกดขึ้นที่ชั้น 3 แล้วมีลิฟต์กำลังวิ่งขึ้นอยู่ที่ชั้น 2 ➔ มอบหมายให้แวะรับ</div>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex items-start gap-3">
+                <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold font-mono">ลำดับที่ 3</span>
+                <div>
+                  <div class="font-bold text-white">ลิฟต์สถานะว่าง (IDLE) ที่มีระยะทางใกล้ชั้น R ที่สุด</div>
+                  <div class="text-zinc-400 mt-1">คำนวณจากค่าสัมบูรณ์ <code>distance = |current_floor - R|</code> เลือกลิฟต์ที่ระยะห่างน้อยที่สุด</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "สัญลักษณ์ Flowchart ทั้งหมด (พร้อมรูปวาดจริง)",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-blue-400 font-semibold">[ สไลด์ที่ 07 ] รวมสัญลักษณ์ผังงานทั้งหมด (ANSI / ISO) พร้อมรูปวาดจริง</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">รูปวาดสัญลักษณ์ Flowchart มาตรฐานที่ต้องจำไปวาดสอบ</h2>
+            
+            <div class="space-y-3 pt-1">
+              <div class="text-xs font-bold text-emerald-400 font-mono">★ กลุ่มที่ 1: สัญลักษณ์หลักที่ใช้บ่อยที่สุด (Top 6 ที่กรรมการตรวจ)</div>
+              
+              <div class="grid grid-cols-2 md:grid-cols-6 gap-2 text-center text-xs">
+                
+                <!-- 1. Terminator -->
+                <div class="p-2.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex flex-col justify-between">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <rect x="2" y="2" width="60" height="28" rx="14" fill="rgba(16,185,129,0.12)" stroke="#10b981" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[11px] mt-1">Terminator</div>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">เริ่ม / สิ้นสุด</div>
+                </div>
+
+                <!-- 2. Process -->
+                <div class="p-2.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex flex-col justify-between">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <rect x="2" y="2" width="60" height="28" fill="rgba(59,130,246,0.12)" stroke="#3b82f6" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[11px] mt-1">Process</div>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">ประมวลผล / สั่งการ</div>
+                </div>
+
+                <!-- 3. Decision -->
+                <div class="p-2.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex flex-col justify-between">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <polygon points="32,2 62,16 32,30 2,16" fill="rgba(245,158,11,0.12)" stroke="#f59e0b" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-amber-400 text-[11px] mt-1">Decision</div>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">เงื่อนไข (ใช่ / ไม่ใช่)</div>
+                </div>
+
+                <!-- 4. Input/Output -->
+                <div class="p-2.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex flex-col justify-between">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <polygon points="14,2 62,2 50,30 2,30" fill="rgba(168,85,247,0.12)" stroke="#a855f7" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[11px] mt-1">Input / Output</div>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">รับเข้า / แสดงผล</div>
+                </div>
+
+                <!-- 5. On-page Connector -->
+                <div class="p-2.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex flex-col justify-between">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <circle cx="32" cy="16" r="12" fill="rgba(6,182,212,0.12)" stroke="#06b6d4" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[11px] mt-1">Connector</div>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">เชื่อมในหน้าเดิม</div>
+                </div>
+
+                <!-- 6. Off-page Connector -->
+                <div class="p-2.5 rounded-lg bg-zinc-900 border border-white/[0.08] flex flex-col justify-between">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <polygon points="12,2 52,2 52,18 32,30 12,18" fill="rgba(236,72,153,0.12)" stroke="#ec4899" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[11px] mt-1">Off-page</div>
+                  <div class="text-[10px] text-zinc-400 mt-0.5">เชื่อมข้ามหน้า</div>
+                </div>
+
+              </div>
+
+              <!-- กลุ่ม 2: 5 สัญลักษณ์เฉพาะทาง -->
+              <div class="text-xs font-bold text-blue-400 font-mono pt-2">★ กลุ่มที่ 2: สัญลักษณ์เฉพาะทางอื่นๆ ที่พบบ่อย</div>
+
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-center text-xs">
+                
+                <!-- 7. Subroutine -->
+                <div class="p-2 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <rect x="2" y="2" width="60" height="28" fill="rgba(59,130,246,0.1)" stroke="#3b82f6" stroke-width="2"/>
+                    <line x1="12" y1="2" x2="12" y2="30" stroke="#3b82f6" stroke-width="2"/>
+                    <line x1="52" y1="2" x2="52" y2="30" stroke="#3b82f6" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[10px] mt-1">Subroutine</div>
+                  <div class="text-[9px] text-zinc-400">เรียกฟังก์ชันย่อย (CALL)</div>
+                </div>
+
+                <!-- 8. Document -->
+                <div class="p-2 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <path d="M4,2 L60,2 L60,20 Q46,14 32,20 Q18,26 4,20 Z" fill="rgba(244,63,94,0.1)" stroke="#f43f5e" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[10px] mt-1">Document</div>
+                  <div class="text-[9px] text-zinc-400">พิมพ์เอกสาร/กระดาษ</div>
+                </div>
+
+                <!-- 9. Preparation -->
+                <div class="p-2 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <polygon points="14,2 50,2 62,16 50,30 14,30 2,16" fill="rgba(99,102,241,0.1)" stroke="#6366f1" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[10px] mt-1">Preparation / Loop</div>
+                  <div class="text-[9px] text-zinc-400">กำหนดค่าวนลูป For</div>
+                </div>
+
+                <!-- 10. Manual Input -->
+                <div class="p-2 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <polygon points="2,8 62,2 62,30 2,30" fill="rgba(20,184,166,0.1)" stroke="#14b8a6" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[10px] mt-1">Manual Input</div>
+                  <div class="text-[9px] text-zinc-400">คีย์บอร์ดจากคน</div>
+                </div>
+
+                <!-- 11. Display -->
+                <div class="p-2 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                  <svg class="w-14 h-7 mx-auto my-1" viewBox="0 0 64 32">
+                    <path d="M14,2 L46,2 Q62,16 46,30 L14,30 L2,16 Z" fill="rgba(234,179,8,0.1)" stroke="#eab308" stroke-width="2"/>
+                  </svg>
+                  <div class="font-bold text-white text-[10px] mt-1">Display</div>
+                  <div class="text-[9px] text-zinc-400">แสดงผลออกจอ Monitor</div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "แผนผัง Flowchart ระบบลิฟต์ (เส้นจริง & เวกเตอร์)",
+        render: () => `
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono text-emerald-400 font-semibold">[ สไลด์ที่ 08 ] แผนผัง Flowchart ระบบลิฟต์ 3 ตัว (เส้นเชื่อมต่อจริง เวกเตอร์ SVG คมชัด 100%)</span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">ANSI STANDARD 2D FLOW</span>
+            </div>
+            <h2 class="text-xl font-bold text-white">แผนผัง Flowchart มาตรฐานวิศวกรรม: ควบคุมลิฟต์ 3 ตัว ตึก 5 ชั้น</h2>
+
+            <!-- Real Vector SVG Diagram with Authentic Connecting Lines & Arrows -->
+            <div class="w-full bg-[#08080a] border border-white/[0.08] rounded-xl p-2 overflow-x-auto">
+              <svg viewBox="0 0 760 540" class="w-full min-w-[700px] h-auto">
+                <defs>
+                  <!-- หัวลูกศรสำหรับเส้นเชื่อมต่อ -->
+                  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 9 5 L 0 9 z" fill="#71717a" />
+                  </marker>
+                  <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 9 5 L 0 9 z" fill="#10b981" />
+                  </marker>
+                  <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1 L 9 5 L 0 9 z" fill="#f43f5e" />
+                  </marker>
+                </defs>
+
+                <!-- 1. Start (Terminator) -->
+                <rect x="280" y="15" width="200" height="34" rx="17" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="2"/>
+                <text x="380" y="37" fill="#6ee7b7" font-size="12" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">[เริ่มต้น] ผู้โดยสารกดเรียกลิฟต์</text>
+
+                <!-- Line 1 -> 2 -->
+                <line x1="380" y1="49" x2="380" y2="78" stroke="#71717a" stroke-width="2" marker-end="url(#arrow)"/>
+
+                <!-- 2. Input (Parallelogram) -->
+                <polygon points="260,80 500,80 480,116 240,116" fill="rgba(168,85,247,0.15)" stroke="#a855f7" stroke-width="2"/>
+                <text x="370" y="102" fill="#d8b4fe" font-size="11" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">รับค่า: ชั้นที่กดเรียก (R) และ ทิศทาง (D)</text>
+
+                <!-- Line 2 -> 3 -->
+                <line x1="370" y1="116" x2="370" y2="142" stroke="#71717a" stroke-width="2" marker-end="url(#arrow)"/>
+
+                <!-- 3. Process (Scan) -->
+                <rect x="230" y="142" width="280" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" stroke-width="2"/>
+                <text x="370" y="163" fill="#93c5fd" font-size="11" font-family="'Sarabun', sans-serif" text-anchor="middle">อ่านสถานะลิฟต์ E1, E2, E3 (Floor, Direction, State)</text>
+
+                <!-- Line 3 -> 4 (Decision 1) -->
+                <line x1="370" y1="176" x2="370" y2="202" stroke="#71717a" stroke-width="2" marker-end="url(#arrow)"/>
+
+                <!-- 4. Decision 1 (Diamond) -->
+                <polygon points="370,204 530,240 370,276 210,240" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" stroke-width="2"/>
+                <text x="370" y="238" fill="#fde68a" font-size="11" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">มีลิฟต์จอดว่าง (IDLE)</text>
+                <text x="370" y="252" fill="#fde68a" font-size="11" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">ที่ชั้น R พอดีหรือไม่?</text>
+
+                <!-- Branching 1: Yes (Right path) -->
+                <path d="M 530 240 L 640 240 L 640 450 L 490 450" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)"/>
+                <rect x="545" y="222" width="60" height="18" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+                <text x="575" y="235" fill="#a7f3d0" font-size="10" font-weight="bold" text-anchor="middle">ใช่ (Yes)</text>
+
+                <!-- Branching 1: No (Down to Decision 2) -->
+                <line x1="370" y1="276" x2="370" y2="312" stroke="#f43f5e" stroke-width="2" marker-end="url(#arrow-red)"/>
+                <rect x="375" y="284" width="65" height="18" rx="4" fill="#4c0519" stroke="#f43f5e" stroke-width="1"/>
+                <text x="407" y="297" fill="#fecdd3" font-size="10" font-weight="bold" text-anchor="middle">ไม่ใช่ (No)</text>
+
+                <!-- 5. Decision 2 (Diamond) -->
+                <polygon points="370,314 530,350 370,386 210,350" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" stroke-width="2"/>
+                <text x="370" y="348" fill="#fde68a" font-size="11" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">มีลิฟต์วิ่งมาทางเดียวกัน (ทิศ D)</text>
+                <text x="370" y="362" fill="#fde68a" font-size="11" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">และยังไม่เลยชั้น R?</text>
+
+                <!-- Branching 2: Yes (Left Path) -->
+                <path d="M 210 350 L 100 350 L 100 400" fill="none" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)"/>
+                <rect x="120" y="335" width="55" height="18" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1"/>
+                <text x="147" y="348" fill="#a7f3d0" font-size="10" font-weight="bold" text-anchor="middle">มี (Yes)</text>
+
+                <!-- Process 2A: Pick Same Direction -->
+                <rect x="20" y="400" width="160" height="34" fill="rgba(59,130,246,0.15)" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="100" y="421" fill="#93c5fd" font-size="10" font-family="'Sarabun', sans-serif" text-anchor="middle">เลือกลิฟต์ที่ทิศเดียวกันที่ใกล้สุด</text>
+
+                <!-- Branching 2: No (Right Path) -->
+                <path d="M 530 350 L 550 350 L 550 400" fill="none" stroke="#f43f5e" stroke-width="2" marker-end="url(#arrow-red)"/>
+                <rect x="530" y="365" width="60" height="18" rx="4" fill="#4c0519" stroke="#f43f5e" stroke-width="1"/>
+                <text x="560" y="378" fill="#fecdd3" font-size="10" font-weight="bold" text-anchor="middle">ไม่มี (No)</text>
+
+                <!-- Process 2B: Pick Nearest Idle -->
+                <rect x="470" y="400" width="160" height="34" fill="rgba(168,85,247,0.15)" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="550" y="421" fill="#d8b4fe" font-size="10" font-family="'Sarabun', sans-serif" text-anchor="middle">เลือกลิฟต์ว่างที่ระยะ |Floor-R| สั้นสุด</text>
+
+                <!-- Merge Lines to Center Process (Dispatch) -->
+                <path d="M 100 434 L 100 450 L 250 450" fill="none" stroke="#71717a" stroke-width="2" marker-end="url(#arrow)"/>
+                <path d="M 550 434 L 550 450 L 490 450" fill="none" stroke="#71717a" stroke-width="2"/>
+
+                <!-- 6. Process: Dispatch & Move -->
+                <rect x="250" y="434" width="240" height="34" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="2"/>
+                <text x="370" y="455" fill="#bfdbfe" font-size="11" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">สั่งเคลื่อนที่ ➔ เปิดประตู 10 วิ ➔ ปิดประตู</text>
+
+                <!-- Line 6 -> 7 -->
+                <line x1="370" y1="468" x2="370" y2="495" stroke="#71717a" stroke-width="2" marker-end="url(#arrow)"/>
+
+                <!-- 7. End (Terminator) -->
+                <rect x="270" y="495" width="200" height="32" rx="16" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="2"/>
+                <text x="370" y="516" fill="#6ee7b7" font-size="12" font-family="'Sarabun', sans-serif" font-weight="bold" text-anchor="middle">[สิ้นสุด] ปรับสถานะพร้อมรับงานถัดไป</text>
+
+              </svg>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "คัมภีร์ Pseudocode (รหัสเทียม)",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-blue-400 font-semibold">[ สไลด์ที่ 09 ] รหัสเทียม (Pseudocode) คืออะไร และต้องเขียนอย่างไร?</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">พจนานุกรมคำสั่ง Pseudocode ที่ต้องใช้ในห้องสอบ</h2>
+            
+            <p class="text-xs text-zinc-400 leading-relaxed">
+              <b>ซูโดโค้ด (Pseudocode):</b> คือคำสั่งจำลองขั้นตอนการทำงานของโปรแกรมในรูปแบบข้อความภาษาอังกฤษกึ่งทางการ โดย <u>ไม่ยึดติดกับไวยากรณ์ (Syntax) ของภาษาใดภาษาหนึ่ง</u> กรรมการจะตรวจดู "ตรรกะและการเรียงลำดับคำสั่ง":
+            </p>
+
+            <div class="overflow-hidden rounded-lg border border-white/[0.08] text-xs">
+              <table class="w-full text-left font-mono">
+                <thead class="bg-zinc-900 border-b border-white/[0.08] text-zinc-300">
+                  <tr>
+                    <th class="p-2.5">คำสั่ง Pseudocode</th>
+                    <th class="p-2.5">ความหมาย & หน้าที่</th>
+                    <th class="p-2.5 text-emerald-400">ตัวอย่างการเขียนในกระดาษ</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/[0.04] text-zinc-400 bg-zinc-950 text-[11px]">
+                  <tr>
+                    <td class="p-2 text-white font-bold">BEGIN ... END</td>
+                    <td class="p-2 font-sans">กำหนดจุดเริ่มต้นและจุดสิ้นสุดของอัลกอริทึม</td>
+                    <td class="p-2 text-zinc-300">BEGIN Elevator_Control ... END</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-purple-400 font-bold">INPUT / READ</td>
+                    <td class="p-2 font-sans">การรับค่าข้อมูลจากภายนอกเข้าสู่ระบบ</td>
+                    <td class="p-2 text-zinc-300">INPUT request_floor, request_dir</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-purple-400 font-bold">OUTPUT / PRINT</td>
+                    <td class="p-2 font-sans">การส่งออกข้อมูล แสดงผล หรือพิมพ์เอกสาร</td>
+                    <td class="p-2 text-zinc-300">OUTPUT "เปิดประตูลิฟต์รับผู้โดยสาร"</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-blue-400 font-bold">SET / COMPUTE</td>
+                    <td class="p-2 font-sans">การกำหนดค่า หรือ ประมวลผลคำนวณทางคณิตศาสตร์</td>
+                    <td class="p-2 text-zinc-300">SET min_distance = 999</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-amber-400 font-bold">IF ... THEN ... ELSE</td>
+                    <td class="p-2 font-sans">การตรวจสอบเงื่อนไขทางเลือก (ต้องปิดด้วย END IF เสมอ)</td>
+                    <td class="p-2 text-zinc-300">IF E.state == IDLE THEN ... END IF</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-emerald-400 font-bold">FOR EACH ... DO</td>
+                    <td class="p-2 font-sans">การวนลูปตรวจสอบสมาชิกทีละตัว (ปิดด้วย END FOR)</td>
+                    <td class="p-2 text-zinc-300">FOR EACH E IN (E1, E2, E3) DO ... END FOR</td>
+                  </tr>
+                  <tr>
+                    <td class="p-2 text-blue-400 font-bold">CALL</td>
+                    <td class="p-2 font-sans">การเรียกใช้ฟังก์ชันย่อย หรือสั่งอุปกรณ์ภายนอกทำงาน</td>
+                    <td class="p-2 text-zinc-300">CALL Move_To_Floor(E, request_floor)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="p-3 bg-zinc-900 border border-white/[0.08] rounded-lg text-xs space-y-1">
+              <div class="font-bold text-emerald-400">★ 3 กฎทองในการเขียน Pseudocode ให้ได้คะแนนเต็ม:</div>
+              <div class="text-zinc-300">1. เขียนคำสั่งควบคุมหลักด้วย <b>ตัวพิมพ์ใหญ่ (UPPERCASE)</b> เช่น IF, THEN, FOR, BEGIN, END</div>
+              <div class="text-zinc-300">2. ต้องมีการ <b>เยื้องย่อหน้า (Indentation)</b> บรรทัดที่อยู่ภายใต้ IF หรือ FOR เสมอเพื่อให้อ่านง่าย</div>
+              <div class="text-zinc-300">3. มีบล็อกเปิดต้องมีบล็อกปิด เช่น เปิด IF ต้องปิดด้วย <b>END IF</b>, เปิด FOR ต้องปิดด้วย <b>END FOR</b></div>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "ตัวอย่างซูโดโค้ด (Pseudocode) ลิฟต์",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-blue-400 font-semibold">[ สไลด์ที่ 10 ] โครงสร้างซูโดโค้ด</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">ซูโดโค้ด (Pseudocode) ควบคุมลิฟต์ 3 ตัว</h2>
+            <div class="p-3.5 rounded-xl bg-black/60 border border-white/[0.08] overflow-x-auto text-[11px] font-mono text-zinc-300 max-h-[340px] leading-relaxed">
+<pre><code>BEGIN ควบคุมลิฟต์(request_floor, request_dir)
+    TARGET = NULL
+    MIN_DISTANCE = 999
+
+    // ลำดับที่ 1: ตรวจหาลิฟต์ว่างที่จอดอยู่ชั้นเดียวกัน
+    FOR EACH E IN (E1, E2, E3) DO:
+        IF E.state == IDLE AND E.current_floor == request_floor THEN
+            TARGET = E
+            GOTO DISPATCH
+        END IF
+    END FOR
+
+    // ลำดับที่ 2: ตรวจหาลิฟต์ที่วิ่งมาทางเดียวกันและยังไม่เลยชั้น
+    FOR EACH E IN (E1, E2, E3) DO:
+        IF E.state == MOVING AND E.direction == request_dir THEN
+            IF (request_dir == UP AND E.current_floor &lt; request_floor) OR
+               (request_dir == DOWN AND E.current_floor &gt; request_floor) THEN
+                TARGET = E
+                GOTO DISPATCH
+            END IF
+        END IF
+    END FOR
+
+    // ลำดับที่ 3: หากไม่มี ให้หาลิฟต์สถานะว่างที่อยู่ใกล้ที่สุด
+    FOR EACH E IN (E1, E2, E3) DO:
+        IF E.state == IDLE THEN
+            dist = ABS(E.current_floor - request_floor)
+            IF dist &lt; MIN_DISTANCE THEN
+                MIN_DISTANCE = dist
+                TARGET = E
+            END IF
+        END IF
+    END FOR
+
+DISPATCH:
+    CALL สั่งเคลื่อนที่(TARGET, request_floor)
+    CALL เปิดประตู(TARGET)
+    WAIT 10 SECONDS
+    CALL ปิดประตู(TARGET)
+END</code></pre>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "พจนานุกรมคำสั่ง SQL",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-amber-400 font-semibold">[ สไลด์ที่ 11 ] พจนานุกรมคำสั่ง SQL</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">ความหมายและหน้าที่ของคำสั่ง SQL (ต้องรู้ก่อนเขียน)</h2>
+            <div class="overflow-hidden rounded-lg border border-white/[0.08] text-xs">
+              <table class="w-full text-left">
+                <thead class="bg-zinc-900 border-b border-white/[0.08] text-zinc-300 font-semibold font-mono">
+                  <tr>
+                    <th class="p-3">คำสั่ง SQL</th>
+                    <th class="p-3">หน้าที่และการทำงาน</th>
+                    <th class="p-3 text-rose-400">ข้อควรระวังสำคัญ</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/[0.04] text-zinc-400 bg-zinc-950 font-mono">
+                  <tr>
+                    <td class="p-3 text-emerald-400 font-bold">INSERT INTO</td>
+                    <td class="p-3 font-sans">เพิ่มแถวข้อมูลใหม่เข้าไปในตาราง</td>
+                    <td class="p-3 font-sans text-zinc-500">ลำดับคอลัมน์ต้องตรงกับค่าที่ใส่</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 text-amber-400 font-bold">UPDATE ... SET</td>
+                    <td class="p-3 font-sans">แก้ไขเปลี่ยนแปลงค่าในคอลัมน์เดิม</td>
+                    <td class="p-3 font-sans text-rose-400 font-bold">ห้ามลืม WHERE เด็ดขาด! มิฉะนั้นจะเปลี่ยนทุกแถว</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 text-rose-400 font-bold">DELETE FROM</td>
+                    <td class="p-3 font-sans">ลบแถวข้อมูลออกจากตาราง</td>
+                    <td class="p-3 font-sans text-rose-400 font-bold">ห้ามลืม WHERE เด็ดขาด! ข้อมูลจะหายทั้งตาราง</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 text-blue-400 font-bold">INNER JOIN</td>
+                    <td class="p-3 font-sans">เชื่อมตารางเฉพาะคู่ที่ Foreign Key ตรงกัน</td>
+                    <td class="p-3 font-sans text-zinc-500">แถวที่ไม่มีคู่จะไม่แสดงผลออกมา</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3 text-purple-400 font-bold">LEFT JOIN</td>
+                    <td class="p-3 font-sans">ยึดตารางซ้ายหลัก แสดงครบทุกแถว</td>
+                    <td class="p-3 font-sans text-zinc-500">ตารางขวาไม่มีคู่จะแสดงเป็น NULL</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "ตัวอย่างคำสั่ง CRUD (DML)",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-amber-400 font-semibold">[ สไลด์ที่ 12 ] คำสั่งแก้ไขข้อมูลฐานข้อมูล</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">ตัวอย่างคำสั่ง CRUD ในงานที่ดิน (พร้อมจุดระวัง)</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-mono">
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] space-y-1.5">
+                <div class="text-blue-400 font-bold">1. เพิ่มข้อมูล (INSERT)</div>
+                <div class="text-[11px] text-zinc-400 font-sans">เพิ่มเจ้าของที่ดินคนใหม่</div>
+                <div class="p-2 rounded bg-black/60 text-zinc-200 text-[11px]">
+                  INSERT INTO Owners (id, name, phone)<br>
+                  VALUES (101, 'สมชาย', '0812345678');
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] space-y-1.5">
+                <div class="text-amber-400 font-bold">2. แก้ไขข้อมูล (UPDATE)</div>
+                <div class="text-[11px] text-zinc-400 font-sans">ปรับขึ้นราคาโฉนด 10%</div>
+                <div class="p-2 rounded bg-black/60 text-zinc-200 text-[11px]">
+                  UPDATE Deeds<br>
+                  SET price = price * 1.10<br>
+                  <span class="text-rose-400 font-bold">WHERE status = 'ACTIVE';</span>
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] space-y-1.5">
+                <div class="text-rose-400 font-bold">3. ลบข้อมูล (DELETE)</div>
+                <div class="text-[11px] text-zinc-400 font-sans">ลบรายการที่ยกเลิก</div>
+                <div class="p-2 rounded bg-black/60 text-zinc-200 text-[11px]">
+                  DELETE FROM Transactions<br>
+                  <span class="text-rose-400 font-bold">WHERE status = 'CANCELLED';</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3 bg-rose-500/[0.05] border border-rose-500/20 rounded-lg text-xs text-rose-300 font-sans">
+              🚨 <b>คำเตือนเรื่องความปลอดภัย:</b> ในห้องสอบ เมื่อเขียนคำว่า <code>UPDATE</code> หรือ <code>DELETE</code> มือต้องเขียน <code>WHERE</code> ตามทันที อย่าเผลอปล่อยโล่ง
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "การเชื่อมตาราง SQL JOIN ทุกรูปแบบ",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-amber-400 font-semibold">[ สไลด์ที่ 13 ] การเชื่อมโยงตาราง</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">รวมมิตรคำสั่ง SQL JOIN ครบทุกรูปแบบ</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] space-y-1.5">
+                <div class="text-blue-400 font-bold">INNER JOIN (เฉพาะคู่ที่ตรงกัน)</div>
+                <div class="text-[11px] text-zinc-400 font-sans">แสดงเจ้าของเฉพาะคนที่มีโฉนดที่ดินในระบบ</div>
+                <div class="p-2 rounded bg-black/60 text-zinc-200 text-[11px]">
+                  SELECT O.name, D.deed_no<br>
+                  FROM Owners O<br>
+                  <span class="text-blue-400 font-bold">INNER JOIN</span> Deeds D ON O.id = D.owner_id;
+                </div>
+              </div>
+
+              <div class="p-3.5 rounded-lg bg-zinc-900 border border-white/[0.08] space-y-1.5">
+                <div class="text-emerald-400 font-bold">LEFT JOIN (ตารางซ้ายครบทุกคน)</div>
+                <div class="text-[11px] text-zinc-400 font-sans">แสดงเจ้าของทุกคน แม้ยังไม่มีโฉนดก็ต้องแสดงชื่อ</div>
+                <div class="p-2 rounded bg-black/60 text-zinc-200 text-[11px]">
+                  SELECT O.name, D.deed_no<br>
+                  FROM Owners O<br>
+                  <span class="text-emerald-400 font-bold">LEFT JOIN</span> Deeds D ON O.id = D.owner_id;
+                </div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg bg-zinc-900 border border-white/[0.08] text-xs font-mono space-y-1">
+              <div class="text-purple-400 font-bold">โจทย์ระดับสูง: เชื่อม 3 ตาราง + หาผลรวม GROUP BY + HAVING</div>
+              <div class="p-2 rounded bg-black/60 text-zinc-200 text-[11px] overflow-x-auto">
+                SELECT O.name, SUM(T.fee) AS total_fee<br>
+                FROM Owners O<br>
+                INNER JOIN Deeds D ON O.id = D.owner_id<br>
+                INNER JOIN Transactions T ON D.id = T.deed_id<br>
+                GROUP BY O.id, O.name <span class="text-amber-400 font-bold">HAVING SUM(T.fee) > 50000;</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "5 จุดบกพร่องที่ทำให้ตกสัมภาษณ์",
+        render: () => `
+          <div class="space-y-4">
+            <span class="text-xs font-mono text-rose-400 font-semibold">[ สไลด์ที่ 14 ] กับดักที่พบบ่อย</span>
+            <h2 class="text-xl md:text-2xl font-bold text-white">5 ข้อผิดพลาดที่ทำให้ตกข้อเขียน</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs pt-1">
+              <div class="p-3 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="font-bold text-rose-400">1. มัวแต่ติดหล่มกับข้อกานานเกินไป</div>
+                <div class="text-zinc-400 mt-1">ข้อกาคิดเป็น 30% แต่นั่งทำไปเกิน 1 ชั่วโมง ทำให้ข้อเขียน 70 คะแนนทำไม่ทัน</div>
+              </div>
+
+              <div class="p-3 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="font-bold text-rose-400">2. เขียนโค้ดไม่ครบ 5 ขั้นตอน</div>
+                <div class="text-zinc-400 mt-1">เขียนฟังก์ชันแรกละเอียดมากจนหมดเวลา ดีกว่าคือเขียนโครงให้ครบทั้ง 5 ขั้นตอน</div>
+              </div>
+
+              <div class="p-3 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="font-bold text-rose-400">3. สัญลักษณ์ Flowchart ผิดมาตรฐาน</div>
+                <div class="text-zinc-400 mt-1">เอาสี่เหลี่ยมผืนผ้าไปใช้ตอน Decision หรือข้าวหลามตัดไม่มีลูกศรแยก ใช่/ไม่ใช่</div>
+              </div>
+
+              <div class="p-3 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="font-bold text-rose-400">4. สลับ Foreign Key ตอนเขียน JOIN</div>
+                <div class="text-zinc-400 mt-1">อ่านชื่อคอลัมน์ไม่ละเอียด เอาคอลัมน์ที่ไม่เกี่ยวข้องกันมาเชื่อมต่อกัน</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        tag: "สรุป 3 คาถาสำคัญก่อนส่งกระดาษ",
+        render: () => `
+          <div class="space-y-6 text-center py-4">
+            <span class="text-xs font-mono text-emerald-400 font-semibold">[ สไลด์ที่ 15 ] คาถาส่งกระดาษสอบ</span>
+            <h2 class="text-2xl md:text-3xl font-bold text-white">3 คาถาท่องจำก่อนเข้าห้องสอบ</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-left max-w-3xl mx-auto pt-2 text-xs">
+              <div class="p-4 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="font-bold text-purple-400 mb-1">คาถาที่ 1: โค้ด 5 ขั้นตอน</div>
+                <div class="text-zinc-200 font-semibold leading-relaxed">
+                  "รับเข้าตรวจ ➔ หาดู ➔ คิดเลข ➔ บันทึก ➔ แสดงผล"
+                </div>
+              </div>
+
+              <div class="p-4 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="font-bold text-blue-400 mb-1">คาถาที่ 2: ลิฟต์ 3 ตัว</div>
+                <div class="text-zinc-200 font-semibold leading-relaxed">
+                  "ชั้นเดียวกัน ➔ ทางเดียวกัน ➔ ว่างและใกล้สุด"
+                </div>
+              </div>
+
+              <div class="p-4 rounded-lg bg-zinc-900 border border-white/[0.08]">
+                <div class="font-bold text-amber-400 mb-1">คาถาที่ 3: คำสั่ง SQL</div>
+                <div class="text-zinc-200 font-semibold leading-relaxed">
+                  "UPDATE หรือ DELETE ต้องมี WHERE เสมอ"
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-3">
+              <button onclick="switchTab('test')" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs ease-spring inline-flex items-center gap-2">
+                <span>สลับไปห้องซ้อมตรวจโค้ดสด (Verification Console)</span>
+                <span>➔</span>
+              </button>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+    // ================= คลังโจทย์สุ่มหลากหลาย (ครบทั้ง 3 พาร์ท รวม 12 โจทย์) =================
+    const scenarios = {
+      // -------------------------------------------------------------
+      // พาร์ทที่ 1: เขียนโปรแกรม 5 ขั้นตอน (5 โจทย์จริงงานราชการ)
+      // -------------------------------------------------------------
+      1: [
+        {
+          id: "bus",
+          title: "ระบบจองตั๋วรถทัวร์ออนไลน์ (5 ขั้นตอน)",
+          desc: "ผู้โดยสารระบุเส้นทางและจำนวนที่นั่ง ระบบเช็กที่นั่งว่าง คำนวณราคาพร้อม VAT 7% ตัดยอดที่นั่ง และออกตั๋ว",
+          filename: "bus_booking.py",
+          steps: [
+            { id: "s1", name: "ขั้นตอนที่ 1: รับข้อมูล & ตรวจความถูกต้อง", desc: "รับเส้นทาง + ตรวจจำนวนที่นั่ง > 0", check: (c) => /process_1|input|รับ/i.test(c) && (/>\s*0|<=|ValueError/i.test(c)) },
+            { id: "s2", name: "ขั้นตอนที่ 2: ค้นหาเที่ยวรถ & เช็กที่นั่งว่าง", desc: "ค้นหาเส้นทางในระบบและเช็กที่นั่งคงเหลือ", check: (c) => /process_2|check|available|seats|ว่าง|ที่นั่ง/i.test(c) },
+            { id: "s3", name: "ขั้นตอนที่ 3: คำนวณค่าโดยสาร & ภาษี 7%", desc: "คำนวณราคารวม + ภาษีมูลค่าเพิ่ม VAT 7%", check: (c) => /process_3|calc|0\.07|vat|tax|ภาษี/i.test(c) },
+            { id: "s4", name: "ขั้นตอนที่ 4: ตัดสต็อก & บันทึกการจอง", desc: "ตัดยอดที่นั่งว่างและบันทึกประวัติ", check: (c) => /process_4|save|-=|record|booking|บันทึก/i.test(c) },
+            { id: "s5", name: "ขั้นตอนที่ 5: ออกตั๋วโดยสาร E-Ticket", desc: "แสดงผลข้อมูลตั๋วโดยสารทางหน้าจอ", check: (c) => /process_5|print|ticket|ตั๋ว|แสดง/i.test(c) }
+          ],
+          template: `# ขั้นตอนที่ 1: รับข้อมูลและตรวจความถูกต้อง
+def process_1_input():
+    route = input("เส้นทาง: ").strip()
+    seats = int(input("จำนวนที่นั่ง: "))
+    if seats <= 0: raise ValueError("จำนวนที่นั่งต้องมากกว่า 0")
+    return route, seats
+
+# ขั้นตอนที่ 2: ค้นหาเที่ยวรถและเช็กที่นั่งว่าง
+def process_2_check(route, seats, db):
+    if route not in db or db[route]["available"] < seats:
+        return False, 0
+    return True, db[route]["price"]
+
+# ขั้นตอนที่ 3: คำนวณค่าโดยสารและภาษี 7%
+def process_3_calc(seats, price):
+    subtotal = seats * price
+    vat = subtotal * 0.07
+    return subtotal + vat
+
+# ขั้นตอนที่ 4: ตัดสต็อกและบันทึกการจอง
+def process_4_save(booking_id, route, seats, total, db):
+    db[route]["available"] -= seats
+    return {"id": booking_id, "route": route, "seats": seats, "total": total}
+
+# ขั้นตอนที่ 5: ออกตั๋วโดยสาร
+def process_5_print(record):
+    print(f"Ticket: {record['id']} | Total: {record['total']:.2f}")
+`
+        },
+        {
+          id: "queue",
+          title: "ระบบจองคิวบริการประชาชนงานที่ดิน (5 ขั้นตอน)",
+          desc: "รับเลขบัตร ปชช. 13 หลัก ตรวจสอบประเภทงาน คำนวณเวลาคอยเฉลี่ย บันทึกลงตารางคิว และออกบัตรคิว",
+          filename: "land_queue.py",
+          steps: [
+            { id: "s1", name: "ขั้นตอนที่ 1: ตรวจเลขบัตร ปชช. 13 หลัก", desc: "รับเลขบัตร ปชช. + เช็กความยาว 13 หลัก", check: (c) => /process_1|input|13|len/i.test(c) },
+            { id: "s2", name: "ขั้นตอนที่ 2: ตรวจสอบคิวว่างของบริการ", desc: "เช็กประเภทงานนิติกรรมและจำนวนคิวรอ", check: (c) => /process_2|check|service|queue|คิว/i.test(c) },
+            { id: "s3", name: "ขั้นตอนที่ 3: คำนวณเวลารอคอยเฉลี่ย", desc: "คำนวณเวลารอ (คิวรอ * 15 นาที)", check: (c) => /process_3|calc|estimate|\*|\+/i.test(c) },
+            { id: "s4", name: "ขั้นตอนที่ 4: บันทึกข้อมูลคิวลงระบบ", desc: "ออกหมายเลขคิวและเซฟข้อมูล", check: (c) => /process_4|save|no|record|queue|บันทึก/i.test(c) },
+            { id: "s5", name: "ขั้นตอนที่ 5: พิมพ์บัตรคิวสำหรับประชาชน", desc: "แสดงผลข้อมูลบัตรคิว", check: (c) => /process_5|print|บัตรคิว|แสดง/i.test(c) }
+          ],
+          template: `# ขั้นตอนที่ 1: รับเลขบัตร ปชช. 13 หลัก
+def process_1_input():
+    cid = input("เลขบัตร ปชช. 13 หลัก: ").strip()
+    if len(cid) != 13: raise ValueError("เลขบัตรต้องมี 13 หลัก")
+    service = input("ประเภทงาน: ").strip()
+    return cid, service
+
+# ขั้นตอนที่ 2: ตรวจสอบคิวรอ
+def process_2_check(service, queue_db):
+    if service not in queue_db: return False, 0
+    return True, queue_db[service]["waiting_count"]
+
+# ขั้นตอนที่ 3: คำนวณเวลารอเฉลี่ย
+def process_3_estimate(waiting_count):
+    return waiting_count * 15
+
+# ขั้นตอนที่ 4: บันทึกคิว
+def process_4_save(cid, service, queue_db):
+    q_no = queue_db[service]["current_no"] + 1
+    queue_db[service]["current_no"] = q_no
+    return {"q_no": q_no, "cid": cid, "service": service}
+
+# ขั้นตอนที่ 5: พิมพ์บัตรคิว
+def process_5_print(rec, wait_time):
+    print(f"คิว: {rec['q_no']} | บริการ: {rec['service']} | รอ {wait_time} นาที")
+`
+        },
+        {
+          id: "supplies",
+          title: "ระบบเบิกจ่ายพัสดุและครุภัณฑ์สำนักงาน (5 ขั้นตอน)",
+          desc: "รับรหัสพนักงาน ตรวจสอบสต็อกคงเหลือในคลัง คำนวณมูลค่าการเบิก ตัดยอดในคลัง และพิมพ์ใบส่งมอบ",
+          filename: "office_supplies.py",
+          steps: [
+            { id: "s1", name: "ขั้นตอนที่ 1: รับข้อมูลการเบิกพัสดุ", desc: "รับรหัสผู้เบิก + ตรวจจำนวนเบิก > 0", check: (c) => /process_1|input|qty|จำนวน/i.test(c) && (/>\s*0|<=|ValueError/i.test(c)) },
+            { id: "s2", name: "ขั้นตอนที่ 2: ตรวจสอบสต็อกคงเหลือในคลัง", desc: "เช็กจำนวนพัสดุในคลังว่ามีพอหรือไม่", check: (c) => /process_2|check|stock|qty|remain|สต็อก/i.test(c) },
+            { id: "s3", name: "ขั้นตอนที่ 3: คำนวณมูลค่าพัสดุที่เบิก", desc: "คำนวณมูลค่ารวม (จำนวน * ราคาต่อหน่วย)", check: (c) => /process_3|calc|value|\*/i.test(c) },
+            { id: "s4", name: "ขั้นตอนที่ 4: ตัดยอดพัสดุออกจากระบบ", desc: "ตัดยอดสต็อกในคลังสินค้า", check: (c) => /process_4|deduct|save|-=|stock|ตัด/i.test(c) },
+            { id: "s5", name: "ขั้นตอนที่ 5: ออกเอกสารใบเบิกพัสดุ", desc: "พิมพ์เอกสารใบส่งมอบพัสดุ", check: (c) => /process_5|print|slip|ใบเบิก|แสดง/i.test(c) }
+          ],
+          template: `# ขั้นตอนที่ 1: รับข้อมูลการเบิกพัสดุ
+def process_1_input():
+    emp_id = input("รหัสพนักงาน: ").strip()
+    item_id = input("รหัสพัสดุ: ").strip()
+    qty = int(input("จำนวนที่เบิก: "))
+    if qty <= 0: raise ValueError("จำนวนเบิกต้องมากกว่า 0")
+    return emp_id, item_id, qty
+
+# ขั้นตอนที่ 2: ตรวจสอบสต็อกในคลัง
+def process_2_check_stock(item_id, qty, stock_db):
+    if item_id not in stock_db or stock_db[item_id]["stock"] < qty:
+        return False, 0
+    return True, stock_db[item_id]["unit_price"]
+
+# ขั้นตอนที่ 3: คำนวณมูลค่าพัสดุ
+def process_3_calc_value(qty, unit_price):
+    return qty * unit_price
+
+# ขั้นตอนที่ 4: ตัดสต็อกพัสดุ
+def process_4_deduct(emp_id, item_id, qty, total_val, stock_db):
+    stock_db[item_id]["stock"] -= qty
+    return {"emp_id": emp_id, "item_id": item_id, "qty": qty, "val": total_val}
+
+# ขั้นตอนที่ 5: พิมพ์ใบส่งมอบ
+def process_5_print(slip):
+    print(f"ใบเบิกพัสดุ {slip['item_id']} | จำนวน: {slip['qty']} | มูลค่า: {slip['val']:,.2f}")
+`
+        },
+        {
+          id: "land_tax",
+          title: "ระบบคำนวณภาษีที่ดินและสิ่งปลูกสร้าง (5 ขั้นตอน)",
+          desc: "รับรหัสแปลงที่ดินและประเภทการใช้ประโยชน์ ตรวจสอบราคาประเมิน คำนวณภาษีตามอัตราประเภท ตัดชำระ และพิมพ์ ภ.ด.ส. 6",
+          filename: "land_tax_system.py",
+          steps: [
+            { id: "s1", name: "ขั้นตอนที่ 1: รับข้อมูลแปลงที่ดิน & ประเภท", desc: "รับรหัสแปลง + เช็กประเภท (เกษตร/ที่อยู่อาศัย/พาณิชย์)", check: (c) => /process_1|input|land|แปลง/i.test(c) },
+            { id: "s2", name: "ขั้นตอนที่ 2: ค้นหาราคาประเมินทุนทรัพย์", desc: "ค้นหาข้อมูลที่ดินจากฐานข้อมูลราคาประเมิน", check: (c) => /process_2|lookup|check|price|appraise|val|ราคา/i.test(c) },
+            { id: "s3", name: "ขั้นตอนที่ 3: คำนวณภาษีตามอัตราก้าวหน้า", desc: "คำนวณอัตราภาษีตามประเภทการใช้ประโยชน์", check: (c) => /process_3|calc|tax|\*|rate/i.test(c) },
+            { id: "s4", name: "ขั้นตอนที่ 4: บันทึกประเมินภาษีลงทะเบียนคุม", desc: "เซฟข้อมูลประเมินและสถานะรอชำระ", check: (c) => /process_4|record|save|tax|บันทึก/i.test(c) },
+            { id: "s5", name: "ขั้นตอนที่ 5: ออกหนังสือแจ้งประเมิน (ภ.ด.ส.6)", desc: "พิมพ์เอกสารใบแจ้งประเมินภาษี", check: (c) => /process_5|print|ภ\.ด\.ส|doc|แสดง/i.test(c) }
+          ],
+          template: `# ขั้นตอนที่ 1: รับรหัสแปลงที่ดินและประเภทการใช้ประโยชน์
+def process_1_input():
+    land_id = input("รหัสแปลงที่ดิน: ").strip()
+    usage_type = input("ประเภท (เกษตร/อยู่อาศัย/พาณิชย์): ").strip()
+    if not land_id: raise ValueError("รหัสแปลงที่ดินห้ามว่าง")
+    return land_id, usage_type
+
+# ขั้นตอนที่ 2: ค้นหาราคาประเมินทุนทรัพย์
+def process_2_lookup(land_id, land_db):
+    if land_id not in land_db: return False, 0
+    return True, land_db[land_id]["appraised_val"]
+
+# ขั้นตอนที่ 3: คำนวณภาษีตามประเภท
+def process_3_calc_tax(appraised_val, usage_type):
+    rate = 0.0001 if usage_type == "เกษตร" else 0.0002
+    tax_amount = appraised_val * rate
+    return tax_amount
+
+# ขั้นตอนที่ 4: บันทึกบัญชีคุมภาษี
+def process_4_record(land_id, usage_type, tax, tax_db):
+    tax_db[land_id] = {"tax": tax, "status": "PENDING"}
+    return {"land_id": land_id, "tax": tax, "status": "PENDING"}
+
+# ขั้นตอนที่ 5: ออกใบแจ้ง ภ.ด.ส. 6
+def process_5_print(doc):
+    print(f"ใบแจ้ง ภ.ด.ส.6 แปลงที่ดิน: {doc['land_id']} | ภาษีที่ต้องชำระ: {doc['tax']:,.2f} บาท")
+`
+        },
+        {
+          id: "elderly",
+          title: "ระบบลงทะเบียนรับเบี้ยยังชีพผู้สูงอายุ (5 ขั้นตอน)",
+          desc: "รับเลขบัตร ปชช. และอายุ ตรวจสอบเกณฑ์อายุ >= 60 ปี คำนวณอัตราเบี้ยขั้นบันได (600-1,000 บาท) บันทึกสิทธิ และพิมพ์หนังสือรับรอง",
+          filename: "elderly_welfare.py",
+          steps: [
+            { id: "s1", name: "ขั้นตอนที่ 1: รับเลขบัตร ปชช. และอายุ", desc: "รับค่าและตรวจสอบอายุเป็นตัวเลขจำนวนเต็ม", check: (c) => /process_1|input|age|cid|อายุ/i.test(c) },
+            { id: "s2", name: "ขั้นตอนที่ 2: ตรวจสอบคุณสมบัติอายุ >= 60", desc: "เช็กเกณฑ์อายุผู้สูงอายุต้อง 60 ปีขึ้นไป", check: (c) => /process_2|check|eligibility|60/i.test(c) },
+            { id: "s3", name: "ขั้นตอนที่ 3: คำนวณอัตราเบี้ยแบบขั้นบันได", desc: "60-69ปี=600, 70-79ปี=700, 80-89ปี=800, 90ขึ้นไป=1000", check: (c) => /process_3|calc|600|700|800|1000/i.test(c) },
+            { id: "s4", name: "ขั้นตอนที่ 4: บันทึกข้อมูลผู้มีสิทธิลงฐานข้อมูล", desc: "เซฟข้อมูลและกำหนดสถานะ APPROVED", check: (c) => /process_4|save|record|APPROVED|บันทึก/i.test(c) },
+            { id: "s5", name: "ขั้นตอนที่ 5: พิมพ์หนังสือรับรองการขึ้นทะเบียน", desc: "พิมพ์เอกสารยืนยันสิทธิเบี้ยยังชีพ", check: (c) => /process_5|print|หนังสือรับรอง|แสดง/i.test(c) }
+          ],
+          template: `# ขั้นตอนที่ 1: รับเลขบัตร ปชช. และอายุ
+def process_1_input():
+    cid = input("เลขบัตร ปชช. 13 หลัก: ").strip()
+    age = int(input("อายุ (ปี): "))
+    return cid, age
+
+# ขั้นตอนที่ 2: ตรวจสอบเกณฑ์อายุ >= 60 ปี
+def process_2_check_eligibility(age):
+    if age < 60: return False, "อายุไม่ถึงเกณฑ์ 60 ปี"
+    return True, "ผ่านเกณฑ์ผู้สูงอายุ"
+
+# ขั้นตอนที่ 3: คำนวณเบี้ยยังชีพขั้นบันได
+def process_3_calc_allowance(age):
+    if age < 70: return 600
+    elif age < 80: return 700
+    elif age < 90: return 800
+    else: return 1000
+
+# ขั้นตอนที่ 4: บันทึกประวัติสิทธิ
+def process_4_save_record(cid, allowance, welfare_db):
+    welfare_db[cid] = {"allowance": allowance, "status": "APPROVED"}
+    return {"cid": cid, "allowance": allowance, "status": "APPROVED"}
+
+# ขั้นตอนที่ 5: พิมพ์หนังสือรับรอง
+def process_5_print_cert(res):
+    print(f"หนังสือรับรองสิทธิ CID: {res['cid']} | ได้รับเบี้ยยังชีพเดือนละ: {res['allowance']} บาท")
+`
+        }
+      ],
+
+      // -------------------------------------------------------------
+      // พาร์ทที่ 2: Flowchart & อัลกอริทึม (4 โจทย์หลากหลาย)
+      // -------------------------------------------------------------
+      2: [
+        {
+          id: "lift",
+          title: "ระบบควบคุมลิฟต์ 3 ตัว ตึก 5 ชั้น (Elevator Dispatch)",
+          desc: "คัดเลือกลิฟต์ที่เหมาะสมที่สุดเมื่อมีคนกดเรียก: 1. ว่างชั้นนั้น 2. กำลังวิ่งทางเดียวกัน 3. ว่างและใกล้สุด",
+          filename: "elevator.algo",
+          steps: [
+            { id: "e1", name: "ขั้นที่ 1: วนลูปตรวจลิฟต์ทั้ง 3 ตัว", desc: "มีลูป FOR EACH วนตรวจสถานะลิฟต์", check: (c) => /FOR|วนลูป|ตรวจ/i.test(c) },
+            { id: "e2", name: "ขั้นที่ 2: ตรวจลิฟต์ว่างชั้นเดียวกัน", desc: "เงื่อนไข IDLE และ current_floor == request_floor", check: (c) => (/IDLE|ว่าง/i.test(c)) && /==/i.test(c) },
+            { id: "e3", name: "ขั้นที่ 3: ตรวจลิฟต์ทิศทางเดียวกัน", desc: "เงื่อนไข MOVING และ direction ตรงกัน", check: (c) => /MOVING|direction|ทิศ|UP|DOWN/i.test(c) },
+            { id: "e4", name: "ขั้นที่ 4: คำนวณระยะใกล้สุด (ABS)", desc: "คำนวณระยะห่างเพื่อเลือกลิฟต์ที่ใกล้ที่สุด", check: (c) => /ABS|distance|ระยะ/i.test(c) },
+            { id: "e5", name: "ขั้นที่ 5: สั่งลิฟต์เคลื่อนที่และเปิดประตู", desc: "สั่งการเคลื่อนที่และเปิดปิดประตู", check: (c) => /Move|Door|Open|Close|สั่ง|เคลื่อนที่|เปิด|ปิด|DISPATCH/i.test(c) }
+          ],
+          template: `BEGIN ควบคุมลิฟต์(request_floor, request_dir)
+    TARGET = NULL; MIN_DIST = 999
+
+    // ขั้นที่ 1: ตรวจลิฟต์ว่างชั้นเดียวกัน
+    FOR EACH E IN (E1, E2, E3) DO:
+        IF E.state == IDLE AND E.current_floor == request_floor THEN
+            TARGET = E; GOTO DISPATCH
+        END IF
+    END FOR
+
+    // ขั้นที่ 2: ตรวจลิฟต์วิ่งมาทางเดียวกันและยังไม่เลยชั้น
+    FOR EACH E IN (E1, E2, E3) DO:
+        IF E.state == MOVING AND E.direction == request_dir THEN
+            IF (request_dir == UP AND E.current_floor < request_floor) OR
+               (request_dir == DOWN AND E.current_floor > request_floor) THEN
+                TARGET = E; GOTO DISPATCH
+            END IF
+        END IF
+    END FOR
+
+    // ขั้นที่ 3: เลือกลิฟต์ว่างที่ใกล้ที่สุด
+    FOR EACH E IN (E1, E2, E3) DO:
+        IF E.state == IDLE AND ABS(E.current_floor - request_floor) < MIN_DIST THEN
+            MIN_DIST = ABS(E.current_floor - request_floor)
+            TARGET = E
+        END IF
+    END FOR
+
+DISPATCH:
+    CALL สั่งเคลื่อนที่(TARGET, request_floor)
+    CALL เปิดประตู(TARGET)
+    WAIT 10 SECONDS
+    CALL ปิดประตู(TARGET)
+END`
+        },
+        {
+          id: "queue_counters",
+          title: "ระบบจัดคิวช่องบริการประชาชน 4 ช่อง (Smart Counter Dispatch)",
+          desc: "กระจายคิวไปยัง 4 เคาน์เตอร์: 1. ตรวจหาช่องที่ว่าง (IDLE) 2. หากไม่ว่าง หาช่องที่มีคิวสะสมน้อยที่สุด 3. ส่งสัญญาณเรียกคิว",
+          filename: "counter_dispatch.algo",
+          steps: [
+            { id: "c1", name: "ขั้นที่ 1: วนลูปตรวจเคาน์เตอร์ 1-4", desc: "มีลูปตรวจสถานะทั้ง 4 ช่องบริการ", check: (c) => /FOR|วนลูป|เคาน์เตอร์/i.test(c) },
+            { id: "c2", name: "ขั้นที่ 2: ตรวจหาช่องบริการที่ว่าง (IDLE)", desc: "เงื่อนไข counter.state == IDLE", check: (c) => (/IDLE|ว่าง/i.test(c)) && /==/i.test(c) },
+            { id: "c3", name: "ขั้นที่ 3: หาช่องที่มีคิวรอน้อยที่สุด (Min Queue)", desc: "เปรียบเทียบคิวสะสมหาค่าน้อยสุด", check: (c) => /<|min|waiting|น้อย/i.test(c) },
+            { id: "c4", name: "ขั้นที่ 4: มอบหมายหมายเลขคิวไปยังช่องที่เลือก", desc: "assign queue_no to selected counter", check: (c) => /assign|target|queue|คิว/i.test(c) },
+            { id: "c5", name: "ขั้นที่ 5: ประกาศเรียกคิวและแสดงผลบนจอ", desc: "call announcement / display", check: (c) => /Call|Display|Print|ประกาศ|แสดง/i.test(c) }
+          ],
+          template: `BEGIN กระจายคิวเคาน์เตอร์(queue_no, counters[1..4])
+    BEST_COUNTER = NULL
+    MIN_WAITING = 999
+
+    // ขั้นที่ 1-2: ตรวจหาเคาน์เตอร์ที่ว่างทันที
+    FOR EACH C IN counters DO:
+        IF C.state == IDLE THEN
+            BEST_COUNTER = C
+            GOTO CALL_QUEUE
+        END IF
+    END FOR
+
+    // ขั้นที่ 3: หากไม่มีช่องว่าง ให้หาช่องที่มีคิวสะสมน้อยสุด
+    FOR EACH C IN counters DO:
+        IF C.waiting_count < MIN_WAITING THEN
+            MIN_WAITING = C.waiting_count
+            BEST_COUNTER = C
+        END IF
+    END FOR
+
+CALL_QUEUE:
+    C.waiting_count = C.waiting_count + 1
+    CALL ประกาศเรียกคิว(BEST_COUNTER.id, queue_no)
+    CALL แสดงผลหน้าจอ(BEST_COUNTER.id, queue_no)
+END`
+        },
+        {
+          id: "server_alert",
+          title: "ระบบตรวจจับและแจ้งเตือนอุณหภูมิห้องเซิร์ฟเวอร์ (IoT Alert)",
+          desc: "อ่านค่า Sensor อุณหภูมิ: ถ้า &lt; 25°C ปกติ / 25-30°C เปิดแอร์เสริม / &gt; 30°C ส่ง SMS ด่วนและตัดไฟจุดเสี่ยง",
+          filename: "server_temp_alert.algo",
+          steps: [
+            { id: "t1", name: "ขั้นที่ 1: รับค่าอุณหภูมิจากเซนเซอร์ (temp)", desc: "อ่านค่า sensor input", check: (c) => /READ|INPUT|temp|เซนเซอร์/i.test(c) },
+            { id: "t2", name: "ขั้นที่ 2: ตรวจสภาวะปกติ (<= 25)", desc: "เงื่อนไขสถานะปกติ บันทึก Log", check: (c) => /25/i.test(c) && /IF|NORMAL|ปกติ/i.test(c) },
+            { id: "t3", name: "ขั้นที่ 3: ตรวจสภาวะเตือนภัย (26 - 30)", desc: "สั่งเปิดแอร์สำรองตัวที่ 2", check: (c) => /30/i.test(c) && /แอร์|ac|fan|air/i.test(c) },
+            { id: "t4", name: "ขั้นที่ 4: ตรวจสภาวะวิกฤต (> 30)", desc: "ส่ง SMS/แจ้งเตือนฉุกเฉิน", check: (c) => />\s*30|ELSE|เกิน\s*30/i.test(c) && /SMS|alert|เตือน|ไซเรน/i.test(c) },
+            { id: "t5", name: "ขั้นที่ 5: วนลูปหน่วงเวลาตรวจสอบต่อเนื่อง", desc: "คำสั่ง delay/wait วนซ้ำ", check: (c) => /WAIT|DELAY|LOOP|หน่วง/i.test(c) }
+          ],
+          template: `BEGIN ตรวจสอบอุณหภูมิห้องเซิร์ฟเวอร์
+LOOP FOREVER DO:
+    temp = READ_SENSOR(TEMP_SENSOR_1)
+
+    IF temp <= 25 THEN
+        CALL บันทึกสถานะ("NORMAL", temp)
+    ELSE IF temp <= 30 THEN
+        CALL เปิดแอร์สำรองตัวที่2()
+        CALL บันทึกสถานะ("WARNING", temp)
+    ELSE
+        // อุณหภูมิสูงวิกฤตเกิน 30 องศา
+        CALL ส่งSMSแจ้งเตือนด่วน("วิกฤตความร้อนห้อง Server!", temp)
+        CALL ส่งสัญญาณไซเรน()
+    END IF
+
+    WAIT 30 SECONDS
+END LOOP
+END`
+        },
+        {
+          id: "loan_check",
+          title: "ระบบตรวจสอบสิทธิกู้เงินสวัสดิการข้าราชการ (Loan Approval)",
+          desc: "รับเงินเดือนและอายุราชการ: ตรวจสอบอายุราชการ >= 1 ปี และเงินเดือนสุทธิหลังหักค่างวดต้องไม่ต่ำกว่า 30%",
+          filename: "welfare_loan.algo",
+          steps: [
+            { id: "l1", name: "ขั้นที่ 1: รับค่าเงินเดือน, อายุราชการ, วงเงินกู้", desc: "รับค่าตัวแปรเบื้องต้น", check: (c) => /salary|service|loan|เงินเดือน|อายุราชการ/i.test(c) },
+            { id: "l2", name: "ขั้นที่ 2: ตรวจอายุราชการ >= 1 ปี", desc: "เงื่อนไขอายุราชการ", check: (c) => />=\s*1|service|< 1/i.test(c) },
+            { id: "l3", name: "ขั้นที่ 3: คำนวณค่างวดและเงินเดือนคงเหลือ", desc: "คำนวณค่างวดรายเดือน", check: (c) => /installment|ค่างวด|\/|-/i.test(c) },
+            { id: "l4", name: "ขั้นที่ 4: ตรวจเงินเดือนคงเหลือ >= 30%", desc: "เงื่อนไขเงินเดือนคงเหลือสุทธิ", check: (c) => /0\.3|30%/i.test(c) },
+            { id: "l5", name: "ขั้นที่ 5: แสดงผลอนุมัติหรือปฏิเสธพร้อมเหตุผล", desc: "แสดงผลการพิจารณา", check: (c) => /APPROVED|REJECT|ผ่าน|อนุมัติ|ไม่ผ่าน/i.test(c) }
+          ],
+          template: `BEGIN ตรวจสอบสิทธิกู้เงินสวัสดิการ(salary, service_years, loan_amount, months)
+    // เงื่อนไขที่ 1: อายุราชการต้องไม่น้อยกว่า 1 ปี
+    IF service_years < 1 THEN
+        OUTPUT "ไม่อนุมัติ: อายุราชการน้อยกว่า 1 ปี"
+        EXIT
+    END IF
+
+    // คำนวณค่างวดรายเดือน
+    monthly_payment = loan_amount / months
+    remain_salary = salary - monthly_payment
+
+    // เงื่อนไขที่ 2: เงินเดือนคงเหลือต้องไม่ต่ำกว่า 30% ของเงินเดือนเดิม
+    min_required = salary * 0.30
+    IF remain_salary >= min_required THEN
+        OUTPUT "อนุมัติเงินกู้สำเร็จ ค่างวดเดือนละ: ", monthly_payment
+    ELSE
+        OUTPUT "ไม่อนุมัติ: เงินเดือนคงเหลือต่ำกว่า 30%"
+    END IF
+END`
+        }
+      ],
+
+      // -------------------------------------------------------------
+      // พาร์ทที่ 3: ฐานข้อมูล & คำสั่ง SQL (3 โจทย์ใหญ่)
+      // -------------------------------------------------------------
+      3: [
+        {
+          id: "deeds_db",
+          title: "ฐานข้อมูลที่ดิน: ปรับปรุงโฉนด & สรุปข้อมูล (SQL)",
+          desc: "ตาราง Owners(id, name, phone) และ Deeds(deed_no, owner_id, area_rai, price, status)",
+          filename: "land_deeds.sql",
+          steps: [
+            { id: "q1", name: "ข้อ 1: คำสั่ง UPDATE ตาราง Deeds", desc: "มีคำสั่ง UPDATE ตาราง Deeds ชัดเจน", check: (c) => /UPDATE\s+Deeds/i.test(c) },
+            { id: "q2", name: "ข้อ 2: มีเงื่อนไข WHERE ป้องกันข้อมูลเสียหาย", desc: "คำสั่ง UPDATE มี WHERE กรองเฉพาะแถวที่กำหนด", check: (c) => /UPDATE[\s\S]*?SET[\s\S]*?WHERE/i.test(c) },
+            { id: "q3", name: "ข้อ 3: คำนวณปรับราคาเพิ่ม 10%", desc: "มีการคำนวณ price * 1.10 ในคำสั่ง SET", check: (c) => /price\s*\*\s*1\.1/i.test(c) || /price\s*\+\s*\(price/i.test(c) },
+            { id: "q4", name: "ข้อ 4: คำสั่ง SELECT ดึงข้อมูล", desc: "มีคำสั่ง SELECT ... FROM สำหรับรายงาน", check: (c) => /SELECT[\s\S]*?FROM/i.test(c) },
+            { id: "q5", name: "ข้อ 5: คำสั่ง LEFT JOIN พร้อมเงื่อนไข ON", desc: "เชื่อมตารางแบบ LEFT JOIN พร้อมระบุเงื่อนไข ON", check: (c) => /LEFT\s+JOIN[\s\S]*?ON/i.test(c) }
+          ],
+          template: `-- ข้อ 1: ปรับราคาประเมินโฉนด ACTIVE เพิ่มขึ้น 10%
+UPDATE Deeds
+SET price = price * 1.10
+WHERE status = 'ACTIVE';
+
+-- ข้อ 2: แสดงรายชื่อเจ้าของทุกคนพร้อมเลขที่โฉนด
+SELECT O.name, D.deed_no, D.price
+FROM Owners O
+LEFT JOIN Deeds D ON O.id = D.owner_id;`
+        },
+        {
+          id: "payroll_db",
+          title: "ฐานข้อมูลบุคลากรและเงินเดือน (Employees & Payroll)",
+          desc: "ตาราง Employees(emp_id, emp_name, dept_id, salary, status) และ Departments(dept_id, dept_name)",
+          filename: "payroll_system.sql",
+          steps: [
+            { id: "p1", name: "ข้อ 1: UPDATE ปรับเงินเดือน 8% ฝ่ายไอที (dept_id = 10)", desc: "ปรับ salary * 1.08 เฉพาะ dept_id = 10", check: (c) => /UPDATE\s+Employees/i.test(c) && /1\.08|salary/i.test(c) && /WHERE/i.test(c) },
+            { id: "p2", name: "ข้อ 2: INSERT บันทึกข้อมูลพนักงานใหม่", desc: "เพิ่มพนักงานใหม่พร้อมระบุค่าคอลัมน์", check: (c) => /INSERT\s+INTO\s+Employees/i.test(c) && /VALUES/i.test(c) },
+            { id: "p3", name: "ข้อ 3: INNER JOIN แสดงชื่อพนักงานคู่ชื่อแผนก", desc: "เชื่อมตาราง Employees กับ Departments", check: (c) => /(?:INNER\s+JOIN|JOIN)\s+(?:Departments|Employees)/i.test(c) && /ON/i.test(c) },
+            { id: "p4", name: "ข้อ 4: GROUP BY หาเงินเดือนรวมแยกตามแผนก", desc: "ใช้ฟังก์ชัน SUM(salary) คู่กับ GROUP BY", check: (c) => /SUM\(.*salary.*\)/i.test(c) && /GROUP\s+BY/i.test(c) },
+            { id: "p5", name: "ข้อ 5: กรองเฉพาะแผนกที่ยอดรวม > 200,000 (HAVING)", desc: "ใช้คำสั่ง HAVING SUM(salary) > 200000", check: (c) => /HAVING\s+SUM/i.test(c) && /200000/i.test(c) }
+          ],
+          template: `-- ข้อ 1: ปรับขึ้นเงินเดือน 8% เฉพาะแผนกไอที (dept_id = 10) ที่ยังทำงานอยู่
+UPDATE Employees
+SET salary = salary * 1.08
+WHERE dept_id = 10 AND status = 'ACTIVE';
+
+-- ข้อ 2: เพิ่มพนักงานใหม่
+INSERT INTO Employees (emp_id, emp_name, dept_id, salary, status)
+VALUES (201, 'สมเกียรติ ยิ่งเจริญ', 10, 28000, 'ACTIVE');
+
+-- ข้อ 3: สรุปผลรวมเงินเดือนของแต่ละแผนก เฉพาะแผนกที่ยอดรวมเกิน 200,000
+SELECT D.dept_name, SUM(E.salary) AS total_salary
+FROM Departments D
+INNER JOIN Employees E ON D.dept_id = E.dept_id
+GROUP BY D.dept_id, D.dept_name
+HAVING SUM(E.salary) > 200000;`
+        },
+        {
+          id: "procurement_db",
+          title: "ฐานข้อมูลพัสดุและจัดซื้อจัดจ้าง (Assets & Categories)",
+          desc: "ตาราง Assets(asset_id, asset_name, cat_id, price, purchase_year, condition) และ Categories(cat_id, cat_name)",
+          filename: "procurement.sql",
+          steps: [
+            { id: "a1", name: "ข้อ 1: UPDATE ปรับสถานะเป็นชำรุด (condition = 'DAMAGED')", desc: "แก้ไขพัสดุที่ซื้อก่อนปี 2020", check: (c) => /UPDATE\s+Assets/i.test(c) && /WHERE/i.test(c) && (/2020|DAMAGED/i.test(c)) },
+            { id: "a2", name: "ข้อ 2: DELETE ลบข้อมูลพัสดุที่จำหน่ายออกแล้ว", desc: "ลบรายการที่ condition = 'DISPOSED' พร้อม WHERE", check: (c) => /DELETE\s+FROM\s+Assets/i.test(c) && /WHERE/i.test(c) },
+            { id: "a3", name: "ข้อ 3: LEFT JOIN แสดงหมวดหมู่ทั้งหมดพร้อมพัสดุ", desc: "แสดงหมวดหมู่ทั้งหมด แม้หมวดนั้นยังไม่มีพัสดุ", check: (c) => /LEFT\s+JOIN/i.test(c) && /ON/i.test(c) },
+            { id: "a4", name: "ข้อ 4: COUNT นับจำนวนพัสดุในแต่ละหมวดหมู่", desc: "ใช้ฟังก์ชัน COUNT() ร่วมกับ GROUP BY", check: (c) => /COUNT\(/i.test(c) && /GROUP\s+BY/i.test(c) },
+            { id: "a5", name: "ข้อ 5: เรียงลำดับตามจำนวนจากมากไปน้อย (ORDER BY DESC)", desc: "คำสั่ง ORDER BY ... DESC", check: (c) => /ORDER\s+BY[\s\S]*?DESC/i.test(c) }
+          ],
+          template: `-- ข้อ 1: ปรับสถานะพัสดุที่ซื้อก่อนปี 2020 ให้เป็น 'DAMAGED'
+UPDATE Assets
+SET condition = 'DAMAGED'
+WHERE purchase_year < 2020;
+
+-- ข้อ 2: ลบพัสดุที่จำหน่ายออกแล้ว
+DELETE FROM Assets
+WHERE condition = 'DISPOSED';
+
+-- ข้อ 3: สรุปจำนวนพัสดุในแต่ละหมวดหมู่ เรียงจากมากไปน้อย
+SELECT C.cat_name, COUNT(A.asset_id) AS total_items
+FROM Categories C
+LEFT JOIN Assets A ON C.cat_id = A.cat_id
+GROUP BY C.cat_id, C.cat_name
+ORDER BY total_items DESC;`
+        }
+      ]
+    };
+
+    let currentPart = 1;
+    let currentScenarioIndex = 0;
+    let currentSlide = 0;
+    let currentTab = 'lecture';
+
+    // ================= ฟังก์ชันจัดการโจทย์ =================
+    function getActiveScenario() {
+      const list = scenarios[currentPart] || scenarios[1];
+      return list[currentScenarioIndex % list.length];
+    }
+
+    function switchPart(partNum) {
+      currentPart = partNum;
+      currentScenarioIndex = 0;
+
+      [1, 2, 3].forEach(p => {
+        const btn = document.getElementById(`btnPart${p}`);
+        if (p === partNum) {
+          btn.className = "px-3 py-1.5 rounded-md font-medium bg-zinc-800 text-white ease-spring";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-md font-medium text-zinc-400 hover:text-white ease-spring";
+        }
+      });
+
+      renderCurrentScenario();
+    }
+
+    function randomizeScenario() {
+      const list = scenarios[currentPart] || scenarios[1];
+      currentScenarioIndex = (currentScenarioIndex + 1) % list.length;
+      renderCurrentScenario();
+    }
+
+    function renderCurrentScenario() {
+      const list = scenarios[currentPart] || scenarios[1];
+      const sc = getActiveScenario();
+      document.getElementById('activePartBadge').innerText = `ข้อเขียนที่ ${currentPart}`;
+      document.getElementById('scenarioCounterBadge').innerText = `(โจทย์ที่ ${(currentScenarioIndex % list.length) + 1} จาก ${list.length})`;
+      document.getElementById('activeScenarioTitle').innerText = sc.title;
+      document.getElementById('activeScenarioDesc').innerText = sc.desc;
+      document.getElementById('editorHeaderLabel').innerText = sc.filename;
+
+      const saved = localStorage.getItem(`exam_code_${sc.id}`) || '';
+      document.getElementById('codeEditor').value = saved;
+      onCodeInput();
+
+      renderStepListInitial(sc.steps);
+      resetConsole();
+    }
+
+    function renderStepListInitial(steps) {
+      const container = document.getElementById('stepResultsList');
+      container.innerHTML = steps.map((s) => `
+        <div id="stepRow_${s.id}" class="p-2.5 rounded-lg border border-white/[0.06] bg-zinc-900/60 flex items-center justify-between ease-spring text-zinc-400">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-zinc-600" id="stepDot_${s.id}"></span>
+            <span>${s.name}</span>
+          </div>
+          <span class="text-[10px] font-mono text-zinc-500" id="stepStatus_${s.id}">รอตรวจ</span>
+        </div>
+      `).join('');
+
+      document.getElementById('testSummaryBadge').innerText = "พร้อมตรวจ";
+      document.getElementById('testSummaryBadge').className = "text-zinc-400 font-bold font-mono";
+    }
+
+    function onCodeInput() {
+      const code = document.getElementById('codeEditor').value;
+      const sc = getActiveScenario();
+      localStorage.setItem(`exam_code_${sc.id}`, code);
+
+      const lines = code.split('\n').length;
+      document.getElementById('editorStats').innerText = `${lines} บรรทัด, ${code.length} ตัวอักษร`;
+    }
+
+    function insertTemplateCode() {
+      const sc = getActiveScenario();
+      document.getElementById('codeEditor').value = sc.template;
+      onCodeInput();
+      logConsole(`โหลดโค้ดตัวอย่างสำหรับ [${sc.title}] เรียบร้อย`);
+    }
+
+    // ================= ระบบรันตรวจข้อสอบทีละ STEP =================
+    function runVerification() {
+      const code = document.getElementById('codeEditor').value;
+      const sc = getActiveScenario();
+      const consoleEl = document.getElementById('diagnosticConsole');
+      consoleEl.innerHTML = '';
+
+      logConsole(`กำลังเริ่มการตรวจสอบข้อสอบ: ${sc.filename}...`);
+      logConsole(`โจทย์: ${sc.title}`);
+      logConsole(`--------------------------------------------------`);
+
+      let passedCount = 0;
+
+      sc.steps.forEach((step) => {
+        const isPass = step.check(code);
+        const row = document.getElementById(`stepRow_${step.id}`);
+        const dot = document.getElementById(`stepDot_${step.id}`);
+        const status = document.getElementById(`stepStatus_${step.id}`);
+
+        if (isPass) {
+          passedCount++;
+          row.className = "p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/[0.04] flex items-center justify-between ease-spring text-emerald-300";
+          dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+          status.innerText = "ผ่าน (PASS)";
+          status.className = "text-[10px] font-bold font-mono text-emerald-400";
+          logConsole(`[ผ่าน] ${step.name}: โครงสร้างถูกต้อง`);
+        } else {
+          row.className = "p-2.5 rounded-lg border border-rose-500/30 bg-rose-500/[0.04] flex items-center justify-between ease-spring text-rose-300";
+          dot.className = "w-2 h-2 rounded-full bg-rose-500";
+          status.innerText = "ไม่ผ่าน (FAIL)";
+          status.className = "text-[10px] font-bold font-mono text-rose-400";
+          logConsole(`[ไม่ผ่าน] ${step.name}: ยังขาด ${step.desc}`);
+        }
+      });
+
+      const total = sc.steps.length;
+      logConsole(`--------------------------------------------------`);
+      logConsole(`สรุปผลการประเมิน: ผ่าน ${passedCount} จากทั้งหมด ${total} ขั้นตอน (${Math.round((passedCount/total)*100)}%)`);
+
+      const badge = document.getElementById('testSummaryBadge');
+      if (passedCount === total) {
+        badge.innerText = `ผ่านครบ 100% (25 คะแนนเต็ม)`;
+        badge.className = "text-emerald-400 font-bold font-mono";
+        logConsole(`ผลลัพธ์: ครบถ้วนตามเกณฑ์ Rubric ของกรรมการสอบ`);
+      } else {
+        badge.innerText = `ผ่าน ${passedCount}/${total} ขั้นตอน`;
+        badge.className = "text-amber-400 font-bold font-mono";
+        logConsole(`ผลลัพธ์: ยังไม่สมบูรณ์ โปรดแก้ไขในขั้นตอนที่ขึ้น [ไม่ผ่าน]`);
+      }
+    }
+
+    function logConsole(msg) {
+      const consoleEl = document.getElementById('diagnosticConsole');
+      const div = document.createElement('div');
+      div.innerText = msg;
+      consoleEl.appendChild(div);
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function resetConsole() {
+      const consoleEl = document.getElementById('diagnosticConsole');
+      consoleEl.innerHTML = `<div class="text-zinc-600">// กดปุ่ม "รันตรวจสอบทีละขั้นตอน" เพื่อให้ระบบประเมินโค้ดเทียบกับเกณฑ์ข้อสอบ</div>`;
+    }
+
+    // ================= ฟังก์ชันสลับแท็บและสไลด์ =================
+    function switchTab(tab) {
+      currentTab = tab;
+      const navPill = document.getElementById('navPill');
+      const navLecture = document.getElementById('navLecture');
+      const navTest = document.getElementById('navTest');
+      const lectureView = document.getElementById('lectureView');
+      const testView = document.getElementById('testView');
+      const slideNavControls = document.getElementById('slideNavControls');
+
+      if (tab === 'lecture') {
+        navPill.style.transform = 'translateX(0px)';
+        navPill.style.width = '124px';
+        navLecture.className = 'ease-spring relative z-10 px-3.5 py-1.5 rounded-md font-medium text-white';
+        navTest.className = 'ease-spring relative z-10 px-3.5 py-1.5 rounded-md font-medium text-zinc-400 hover:text-white';
+
+        lectureView.classList.remove('hidden');
+        testView.classList.add('hidden');
+        slideNavControls.classList.remove('hidden');
+      } else {
+        navPill.style.transform = 'translateX(128px)';
+        navPill.style.width = '178px';
+        navLecture.className = 'ease-spring relative z-10 px-3.5 py-1.5 rounded-md font-medium text-zinc-400 hover:text-white';
+        navTest.className = 'ease-spring relative z-10 px-3.5 py-1.5 rounded-md font-medium text-white';
+
+        lectureView.classList.add('hidden');
+        testView.classList.remove('hidden');
+        slideNavControls.classList.add('hidden');
+        renderCurrentScenario();
+      }
+    }
+
+    function renderSlide() {
+      const s = slidesData[currentSlide];
+      const viewport = document.getElementById('slideViewport');
+      viewport.classList.remove('slide-enter');
+      void viewport.offsetWidth;
+      viewport.classList.add('slide-enter');
+
+      viewport.innerHTML = s.render();
+      document.getElementById('slideTag').innerText = s.tag;
+      document.getElementById('slideCounter').innerText = `${String(currentSlide + 1).padStart(2, '0')} / ${String(slidesData.length).padStart(2, '0')}`;
+      document.getElementById('btnPrev').disabled = (currentSlide === 0);
+      document.getElementById('btnNext').disabled = (currentSlide === slidesData.length - 1);
+    }
+
+    function nextSlide() {
+      if (currentSlide < slidesData.length - 1) {
+        currentSlide++;
+        renderSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        renderSlide();
+      }
+    }
+
+    // แป้นพิมพ์ลัด
+    window.addEventListener('keydown', (e) => {
+      if (currentTab === 'lecture') {
+        if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+        else if (e.key === 'ArrowLeft') prevSlide();
+      } else {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          runVerification();
+        }
+      }
+    });
+
+    // เริ่มต้นระบบ
+    renderSlide();
+    switchTab('lecture');
+  </script>
+</body>
+</html>
